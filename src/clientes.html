@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clientes - Resplendor Solar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f3f4f6;
+        padding: 20px;
+      }
+      .card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        padding: 24px;
+      }
+      .input-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #4b5563;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .input-field {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        outline: none;
+        margin-bottom: 16px;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+      }
+      .input-field:focus {
+        border-color: #2563eb;
+        ring: 2px #bfdbfe;
+      }
+      .btn-save {
+        background-color: #1d4ed8;
+        color: white;
+        padding: 14px;
+        border-radius: 6px;
+        font-weight: 600;
+        width: 100%;
+        transition: background 0.2s;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .btn-save:hover {
+        background-color: #1e40af;
+      }
+      .btn-save:disabled {
+        background-color: #9ca3af;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="max-w-2xl mx-auto">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-slate-800 tracking-tight">
+          👤 Cadastro de Clientes
+        </h1>
+        <div
+          id="status"
+          class="hidden text-sm font-medium text-blue-600 animate-pulse"
+        >
+          Processando...
+        </div>
+      </div>
+
+      <div class="card">
+        <!-- ID CLIENTE -->
+        <div>
+          <label class="input-label">ID_CLIENTE</label>
+          <input
+            type="text"
+            id="idCliente"
+            placeholder="Ex: 1001"
+            class="input-field font-mono font-bold text-blue-800 bg-blue-50"
+          />
+        </div>
+
+        <!-- DESCRIÇÃO -->
+        <div>
+          <label class="input-label">DESCRIÇÃO DO CLIENTE</label>
+          <input
+            type="text"
+            id="descricao"
+            placeholder="Nome completo ou Razão Social"
+            class="input-field"
+          />
+        </div>
+
+        <!-- ENDEREÇO -->
+        <div>
+          <label class="input-label">ENDEREÇO</label>
+          <input
+            type="text"
+            id="endereco"
+            placeholder="Rua, Número, Complemento"
+            class="input-field"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <!-- BAIRRO -->
+          <div>
+            <label class="input-label">BAIRRO</label>
+            <input type="text" id="bairro" class="input-field" />
+          </div>
+          <!-- CIDADE -->
+          <div>
+            <label class="input-label">CIDADE</label>
+            <input type="text" id="cidade" class="input-field" />
+          </div>
+        </div>
+
+        <!-- CELULAR -->
+        <div>
+          <label class="input-label">CELULAR</label>
+          <input
+            type="text"
+            id="celular"
+            placeholder="(12) 90000-0000"
+            class="input-field"
+          />
+        </div>
+
+        <button onclick="enviarCliente()" id="btnSalvar" class="btn-save mt-4">
+          <span>💾</span> Gravar Cliente - MAJB SISTEMAS
+        </button>
+      </div>
+
+      <div class="mt-6 text-center">
+        <p
+          class="text-[10px] text-gray-400 font-bold uppercase tracking-widest"
+        >
+          Resplendor Solar • Taubaté/SP • 2025
+        </p>
+      </div>
+    </div>
+
+    <script>
+      function enviarCliente() {
+        const btn = document.getElementById("btnSalvar");
+        const dados = {
+          id: document.getElementById("idCliente").value,
+          descricao: document.getElementById("descricao").value,
+          endereco: document.getElementById("endereco").value,
+          bairro: document.getElementById("bairro").value,
+          cidade: document.getElementById("cidade").value,
+          celular: document.getElementById("celular").value,
+        };
+
+        if (!dados.id || !dados.descricao) {
+          alert("Atenção: ID e DESCRIÇÃO são campos obrigatórios.");
+          return;
+        }
+
+        btn.disabled = true;
+        document.getElementById("status").classList.remove("hidden");
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            alert(res.mensagem);
+            // Limpa o formulário após salvar para novo uso
+            document.querySelectorAll("input").forEach((i) => (i.value = ""));
+            document.getElementById("status").classList.add("hidden");
+            btn.disabled = false;
+          })
+          .withFailureHandler((err) => {
+            alert("Erro no servidor: " + err);
+            btn.disabled = false;
+            document.getElementById("status").classList.add("hidden");
+          })
+          .salvarCliente(dados);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+# --- Configurações do CLASP ---
+
+# Contém o scriptId do seu projeto no Google Drive.
+
+# Recomenda-se ignorar se o repositório for público.
+
+.clasp.json
+
+# Contém os tokens de autenticação (muito importante ignorar!)
+
+.clasprc.json
+
+# --- Dependências e Gestão de Pacotes (Yarn) ---
+
+node_modules/
+yarn-error.log
+.pnp.*
+.yarn/
+
+# Nota: Normalmente mantemos o 'yarn.lock' no Git para garantir
+
+# que toda a equipa use as mesmas versões, mas ignoramos os logs de erro.
+
+# --- Ficheiros do Sistema Operativo ---
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs e Temporários ---
+
+logs
+*.log
+.tmp
+.temp
+
+# --- Configurações de IDE (VS Code) ---
+
+.vscode/

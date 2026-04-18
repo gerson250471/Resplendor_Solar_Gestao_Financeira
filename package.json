@@ -1,0 +1,8 @@
+{
+  "name": "Controle_Financeiro",
+  "version": "1.0.0",
+  "description": "Controle dos pagamentos realizados pelos clientes",
+  "main": "codigo,js",
+  "author": "Gerson Bernardo",
+  "license": "MIT"
+}

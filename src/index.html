@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resplendor Solar - MAJB Sistemas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Ícones (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8fafc;
+      }
+      /* Sistema de SPA (Single Page Application) */
+      .page-view {
+        display: none;
+      }
+      .page-view.active {
+        display: block;
+        animation: fadeIn 0.3s ease-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        padding: 24px;
+      }
+      .input-field {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        outline: none;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+      }
+      .input-field:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+      }
+    </style>
+  </head>
+  <body class="flex h-screen overflow-hidden">
+    <!-- MENU LATERAL -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
+      <div class="p-6">
+        <h1 class="text-xl font-bold text-blue-400">Resplendor Solar</h1>
+        <p class="text-xs text-slate-400 mt-1">MAJB Sistemas CRM</p>
+      </div>
+      <nav class="flex-1 px-4 space-y-2">
+        <button
+          onclick="navegarPara('dashboard')"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-left text-sm font-medium"
+        >
+          <i data-lucide="layout-dashboard" class="w-5 h-5 text-blue-400"></i>
+          Dashboard
+        </button>
+        <button
+          onclick="navegarPara('clientes')"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-left text-sm font-medium"
+        >
+          <i data-lucide="users" class="w-5 h-5 text-green-400"></i>
+          Gestão de Clientes
+        </button>
+        <button
+          onclick="navegarPara('financeiro')"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-left text-sm font-medium"
+        >
+          <i
+            data-lucide="circle-dollar-sign"
+            class="w-5 h-5 text-yellow-400"
+          ></i>
+          Novo Lançamento
+        </button>
+      </nav>
+      <div
+        class="p-4 border-t border-slate-800 text-xs text-center text-slate-500"
+      >
+        Versão 1.0.0
+      </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main class="flex-1 overflow-y-auto p-6 md:p-8">
+      <!-- TELA 1: DASHBOARD -->
+      <section id="view-dashboard" class="page-view active">
+        <h2 class="text-2xl font-bold text-slate-800 mb-6">Visão Geral</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="card border-t-4 border-blue-500">
+            <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
+              Saldo Total
+            </h3>
+            <p class="text-3xl font-bold text-slate-800" id="dash-total">
+              R$ 0,00
+            </p>
+          </div>
+          <div class="card border-t-4 border-green-500">
+            <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
+              Vendas no Mês
+            </h3>
+            <p class="text-3xl font-bold text-slate-800" id="dash-vendas">0</p>
+          </div>
+          <div class="card border-t-4 border-red-500">
+            <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
+              Parcelas Vencidas
+            </h3>
+            <p class="text-3xl font-bold text-slate-800" id="dash-vencidas">
+              0
+            </p>
+          </div>
+        </div>
+        <button
+          onclick="carregarDashboard()"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+        >
+          <i data-lucide="refresh-cw" class="w-4 h-4 inline-block mr-2"></i
+          >Atualizar Dados
+        </button>
+      </section>
+
+      <!-- TELA 2: GESTÃO DE CLIENTES -->
+      <section id="view-clientes" class="page-view">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-slate-800">Clientes</h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Formulário -->
+          <div class="card lg:col-span-1">
+            <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">
+              Novo Cliente
+            </h3>
+            <div class="space-y-4">
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                  >ID (CPF/CNPJ)</label
+                >
+                <input
+                  type="text"
+                  id="cli-id"
+                  class="input-field"
+                  placeholder="Apenas números"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                  >Nome / Descrição</label
+                >
+                <input
+                  type="text"
+                  id="cli-nome"
+                  class="input-field"
+                  placeholder="Nome completo"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                  >Celular</label
+                >
+                <input
+                  type="text"
+                  id="cli-celular"
+                  class="input-field"
+                  placeholder="(12) 99999-9999"
+                />
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                    >Cidade</label
+                  >
+                  <input
+                    type="text"
+                    id="cli-cidade"
+                    class="input-field"
+                    value="Taubaté"
+                  />
+                </div>
+                <div>
+                  <label
+                    class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                    >Bairro</label
+                  >
+                  <input type="text" id="cli-bairro" class="input-field" />
+                </div>
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                  >Endereço</label
+                >
+                <input type="text" id="cli-endereco" class="input-field" />
+              </div>
+              <button
+                id="btnSalvarCliente"
+                onclick="salvarNovoCliente()"
+                class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors mt-2"
+              >
+                Salvar Cadastro
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista -->
+          <div class="card lg:col-span-2">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-bold text-slate-800">Cadastrados</h3>
+              <button
+                onclick="carregarListaClientes()"
+                class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                Atualizar Lista
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-y border-slate-200">
+                    <th class="p-3 text-xs font-bold text-slate-500 uppercase">
+                      ID
+                    </th>
+                    <th class="p-3 text-xs font-bold text-slate-500 uppercase">
+                      Nome
+                    </th>
+                    <th class="p-3 text-xs font-bold text-slate-500 uppercase">
+                      Cidade
+                    </th>
+                    <th
+                      class="p-3 text-xs font-bold text-slate-500 uppercase text-center"
+                    >
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-clientes">
+                  <tr>
+                    <td
+                      colspan="4"
+                      class="p-4 text-center text-slate-400 text-sm"
+                    >
+                      Carregando dados...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TELA 3: SISTEMA FINANCEIRO (LANÇAMENTO) -->
+      <section id="view-financeiro" class="page-view">
+        <h2 class="text-2xl font-bold text-slate-800 mb-6">
+          Novo Lançamento Financeiro
+        </h2>
+
+        <div class="card max-w-3xl">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                >ID da Venda</label
+              >
+              <input
+                type="text"
+                id="fin-idVenda"
+                class="input-field"
+                placeholder="Ex: VEN-001"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                >Cliente</label
+              >
+              <input
+                type="text"
+                id="fin-cliente"
+                class="input-field"
+                placeholder="Nome do Cliente"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                >Valor Total (R$)</label
+              >
+              <input
+                type="number"
+                id="fin-valor"
+                class="input-field"
+                placeholder="0.00"
+                onchange="gerarParcelas()"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                >Qtd. Parcelas</label
+              >
+              <select
+                id="fin-parcelas"
+                class="input-field"
+                onchange="gerarParcelas()"
+              >
+                <option value="1">À Vista (1x)</option>
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+                <option value="6">6x</option>
+                <option value="12">12x</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="border-t pt-4">
+            <h3 class="text-sm font-bold text-slate-700 mb-3">
+              Previsão de Parcelas
+            </h3>
+            <div class="bg-slate-50 rounded border p-4">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="text-left text-slate-500 border-b">
+                    <th class="pb-2">Nº</th>
+                    <th class="pb-2">Vencimento</th>
+                    <th class="pb-2 text-right">Valor</th>
+                  </tr>
+                </thead>
+                <tbody id="lista-parcelas">
+                  <!-- Gerado via JS -->
+                  <tr>
+                    <td colspan="3" class="pt-2 text-center text-slate-400">
+                      Informe o valor total para calcular.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="mt-6 flex justify-end">
+            <button
+              id="btnSalvarVenda"
+              onclick="salvarVenda()"
+              class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg transition-all"
+            >
+              Gravar Lançamento
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- SCRIPTS DE CONTROLE (Client-side) -->
+    <script>
+      // Inicializa os ícones
+      lucide.createIcons();
+
+      // --- NAVEGAÇÃO SPA ---
+      function navegarPara(tela) {
+        document
+          .querySelectorAll(".page-view")
+          .forEach((el) => el.classList.remove("active"));
+        document.getElementById(`view-${tela}`).classList.add("active");
+
+        // Ações automáticas ao entrar na tela
+        if (tela === "dashboard") carregarDashboard();
+        if (tela === "clientes") carregarListaClientes();
+      }
+
+      // --- FUNÇÕES DO DASHBOARD ---
+      function carregarDashboard() {
+        document.getElementById("dash-total").innerText = "Carregando...";
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res.sucesso) {
+              document.getElementById("dash-total").innerText =
+                `R$ ${res.dados.total}`;
+              document.getElementById("dash-vendas").innerText =
+                res.dados.vendasMes;
+              document.getElementById("dash-vencidas").innerText =
+                res.dados.vencidas;
+            } else {
+              alert("Erro ao carregar Dashboard: " + res.mensagem);
+            }
+          })
+          .getResumoFinanceiro();
+      }
+
+      // --- FUNÇÕES DE CLIENTES ---
+      function salvarNovoCliente() {
+        const btn = document.getElementById("btnSalvarCliente");
+        const dados = {
+          id: document.getElementById("cli-id").value,
+          descricao: document.getElementById("cli-nome").value,
+          celular: document.getElementById("cli-celular").value,
+          cidade: document.getElementById("cli-cidade").value,
+          bairro: document.getElementById("cli-bairro").value,
+          endereco: document.getElementById("cli-endereco").value,
+        };
+
+        if (!dados.id || !dados.descricao) {
+          alert("Atenção: ID e Nome são obrigatórios.");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Salvando...";
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            alert(res.mensagem);
+            btn.disabled = false;
+            btn.innerText = "Salvar Cadastro";
+            document
+              .querySelectorAll("#view-clientes input")
+              .forEach((i) => (i.value = ""));
+            document.getElementById("cli-cidade").value = "Taubaté"; // Valor padrão
+            carregarListaClientes();
+          })
+          .salvarCliente(dados);
+      }
+
+      function carregarListaClientes() {
+        const tbody = document.getElementById("tabela-clientes");
+        tbody.innerHTML =
+          '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-sm">Atualizando banco de dados...</td></tr>';
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res.sucesso && res.dados.length > 0) {
+              tbody.innerHTML = res.dados
+                .map(
+                  (c) => `
+                <tr class="hover:bg-slate-100 transition-colors border-b border-slate-100">
+                  <td class="p-3 font-mono font-bold text-blue-600 text-xs">${c.id}</td>
+                  <td class="p-3 font-medium text-slate-800 text-sm">${c.descricao}</td>
+                  <td class="p-3 text-slate-500 text-sm">${c.cidade || "-"}</td>
+                  <td class="p-3 text-center">
+                    <button onclick="excluirCli('${c.id}', '${c.descricao}')" class="text-red-500 hover:text-red-700 text-xs font-bold">Excluir</button>
+                  </td>
+                </tr>
+              `,
+                )
+                .join("");
+            } else {
+              tbody.innerHTML =
+                '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-sm">Nenhum cliente encontrado.</td></tr>';
+            }
+          })
+          .listarClientes();
+      }
+
+      function excluirCli(id, nome) {
+        if (confirm(`Deseja realmente remover o cliente ${nome}?`)) {
+          google.script.run
+            .withSuccessHandler((res) => {
+              alert(res.mensagem);
+              carregarListaClientes();
+            })
+            .eliminarCliente(id);
+        }
+      }
+
+      // --- FUNÇÕES FINANCEIRO ---
+      let parcelasAtuais = [];
+
+      function gerarParcelas() {
+        const valorTotal = parseFloat(
+          document.getElementById("fin-valor").value,
+        );
+        const qtd = parseInt(document.getElementById("fin-parcelas").value);
+        const tbody = document.getElementById("lista-parcelas");
+
+        if (!valorTotal || valorTotal <= 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="3" class="pt-2 text-center text-slate-400">Informe o valor total.</td></tr>';
+          return;
+        }
+
+        // Lógica de cálculo (Aquela mesma que você fez os Testes Unitários!)
+        const valorBase = Math.floor((valorTotal / qtd) * 100) / 100;
+        const resto = parseFloat((valorTotal - valorBase * qtd).toFixed(2));
+
+        parcelasAtuais = [];
+        let html = "";
+        const hoje = new Date();
+
+        for (let i = 1; i <= qtd; i++) {
+          let valorParcela = i === 1 ? valorBase + resto : valorBase;
+
+          let vencimento = new Date(hoje);
+          vencimento.setMonth(vencimento.getMonth() + i);
+          let dataStr = vencimento.toISOString().split("T")[0];
+
+          parcelasAtuais.push({
+            numero: i,
+            vencimento: dataStr,
+            valor: valorParcela,
+            status: "PENDENTE",
+          });
+
+          html += `
+            <tr class="border-b border-slate-100 last:border-0">
+              <td class="py-2 text-slate-600 font-medium">${i}</td>
+              <td class="py-2"><input type="date" value="${dataStr}" class="border rounded px-2 py-1 text-sm bg-white" disabled></td>
+              <td class="py-2 text-right font-mono font-bold text-slate-800">R$ ${valorParcela.toFixed(2)}</td>
+            </tr>
+          `;
+        }
+        tbody.innerHTML = html;
+      }
+
+      function salvarVenda() {
+        const venda = {
+          idVenda: document.getElementById("fin-idVenda").value,
+          cliente: document.getElementById("fin-cliente").value,
+          valorTotal: parseFloat(document.getElementById("fin-valor").value),
+          formaPagamento: document.getElementById("fin-parcelas").value + "x",
+          saldoDevedor: parseFloat(document.getElementById("fin-valor").value),
+          status: "EM ABERTO",
+        };
+
+        if (
+          !venda.idVenda ||
+          !venda.cliente ||
+          !venda.valorTotal ||
+          parcelasAtuais.length === 0
+        ) {
+          alert("Preencha ID, Cliente e Valor corretamente.");
+          return;
+        }
+
+        const btn = document.getElementById("btnSalvarVenda");
+        btn.disabled = true;
+        btn.innerText = "Processando...";
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            alert(res.mensagem);
+            btn.disabled = false;
+            btn.innerText = "Gravar Lançamento";
+            // Limpar formulário
+            document
+              .querySelectorAll("#view-financeiro input")
+              .forEach((i) => (i.value = ""));
+            document.getElementById("lista-parcelas").innerHTML = "";
+          })
+          .withFailureHandler((err) => {
+            alert("Erro técnico: " + err);
+            btn.disabled = false;
+            btn.innerText = "Gravar Lançamento";
+          })
+          .processarGravacao(venda, parcelasAtuais);
+      }
+
+      // Inicializa Dashboard ao abrir
+      window.onload = () => carregarDashboard();
+    </script>
+  </body>
+</html>
