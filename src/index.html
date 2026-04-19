@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Resplendor Solar - MAJB Sistemas</title>
+    <title>Resplendor Solar - Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
@@ -18,7 +18,6 @@
         font-family: "Inter", sans-serif;
         background-color: #f8fafc;
       }
-      /* Sistema de SPA (Single Page Application) */
       .page-view {
         display: none;
       }
@@ -36,9 +35,39 @@
           transform: translateY(0);
         }
       }
-      .card {
+
+      /* Animações do Toast (Notificações) */
+      @keyframes slideInRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateX(100%);
+        }
+      }
+      .toast-enter {
+        animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      .toast-exit {
+        animation: fadeOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .finance-card {
         background: white;
-        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
         box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         padding: 24px;
       }
@@ -57,7 +86,49 @@
       }
     </style>
   </head>
-  <body class="flex h-screen overflow-hidden">
+  <body class="flex h-screen overflow-hidden relative">
+    <!-- CONTÊINER DE TOASTS (Notificações) -->
+    <div
+      id="toast-container"
+      class="fixed top-4 right-4 z-50 flex flex-col gap-3"
+    ></div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
+    <div
+      id="modal-exclusao"
+      class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-sm text-center transform transition-all"
+      >
+        <div
+          class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-50 mb-4 border-4 border-red-100"
+        >
+          <i data-lucide="alert-triangle" class="h-6 w-6 text-red-600"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-2">
+          Confirmar Exclusão
+        </h3>
+        <p id="msg-exclusao-modal" class="text-sm text-slate-500 mb-6">
+          Tem certeza que deseja excluir?
+        </p>
+        <div class="flex justify-center gap-3">
+          <button
+            onclick="fecharModalExclusao()"
+            class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-colors text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            onclick="confirmarExclusao()"
+            class="flex-1 px-4 py-2.5 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 shadow-md transition-colors text-sm"
+          >
+            Sim, Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- MENU LATERAL -->
     <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
       <div class="p-6">
@@ -93,7 +164,7 @@
       <div
         class="p-4 border-t border-slate-800 text-xs text-center text-slate-500"
       >
-        Versão 1.0.0
+        Versão 1.3.0
       </div>
     </aside>
 
@@ -103,7 +174,7 @@
       <section id="view-dashboard" class="page-view active">
         <h2 class="text-2xl font-bold text-slate-800 mb-6">Visão Geral</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div class="card border-t-4 border-blue-500">
+          <div class="finance-card border-t-4 border-blue-500">
             <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
               Saldo Total
             </h3>
@@ -111,13 +182,13 @@
               R$ 0,00
             </p>
           </div>
-          <div class="card border-t-4 border-green-500">
+          <div class="finance-card border-t-4 border-green-500">
             <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
               Vendas no Mês
             </h3>
             <p class="text-3xl font-bold text-slate-800" id="dash-vendas">0</p>
           </div>
-          <div class="card border-t-4 border-red-500">
+          <div class="finance-card border-t-4 border-red-500">
             <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
               Parcelas Vencidas
             </h3>
@@ -143,21 +214,21 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Formulário -->
-          <div class="card lg:col-span-1">
+          <div class="finance-card lg:col-span-1">
             <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">
-              Novo Cliente
+              Detalhes do Cliente
             </h3>
             <div class="space-y-4">
               <div>
                 <label
                   class="block text-xs font-bold text-slate-500 uppercase mb-1"
-                  >ID (CPF/CNPJ)</label
+                  >ID (Automático ou CPF/CNPJ)</label
                 >
                 <input
                   type="text"
                   id="cli-id"
-                  class="input-field"
-                  placeholder="Apenas números"
+                  class="input-field font-mono font-bold text-blue-600"
+                  placeholder="Ex: CLI-1"
                 />
               </div>
               <div>
@@ -212,27 +283,52 @@
                 >
                 <input type="text" id="cli-endereco" class="input-field" />
               </div>
-              <button
-                id="btnSalvarCliente"
-                onclick="salvarNovoCliente()"
-                class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors mt-2"
-              >
-                Salvar Cadastro
-              </button>
+              <div class="flex gap-2 mt-4">
+                <button
+                  id="btnCancelarCliente"
+                  onclick="limparFormularioCliente()"
+                  class="hidden w-1/3 bg-slate-200 text-slate-700 font-bold py-3 rounded-lg hover:bg-slate-300 transition-colors text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  id="btnSalvarCliente"
+                  onclick="salvarNovoCliente()"
+                  class="flex-1 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors text-sm"
+                >
+                  Salvar Cadastro
+                </button>
+              </div>
             </div>
           </div>
 
           <!-- Lista -->
-          <div class="card lg:col-span-2">
+          <div class="finance-card lg:col-span-2">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-lg font-bold text-slate-800">Cadastrados</h3>
               <button
                 onclick="carregarListaClientes()"
                 class="text-blue-600 hover:text-blue-800 text-sm font-medium"
               >
+                <i
+                  data-lucide="refresh-cw"
+                  class="w-4 h-4 inline-block mr-1"
+                ></i>
                 Atualizar Lista
               </button>
             </div>
+
+            <!-- CAMPO DE FILTRO -->
+            <div class="mb-4">
+              <input
+                type="text"
+                id="filtro-cli"
+                onkeyup="filtrarClientes()"
+                placeholder="Pesquisar por Nome, ID ou Cidade..."
+                class="input-field w-full"
+              />
+            </div>
+
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
                 <thead>
@@ -253,7 +349,7 @@
                     </th>
                   </tr>
                 </thead>
-                <tbody id="tabela-clientes">
+                <tbody id="tabela-cli">
                   <tr>
                     <td
                       colspan="4"
@@ -275,7 +371,7 @@
           Novo Lançamento Financeiro
         </h2>
 
-        <div class="card max-w-3xl">
+        <div class="finance-card max-w-3xl">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
               <label
@@ -376,6 +472,41 @@
       // Inicializa os ícones
       lucide.createIcons();
 
+      // --- SISTEMA DE NOTIFICAÇÃO TOAST ---
+      function mostrarToast(mensagem, tipo = "sucesso") {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+
+        let bgColor, icone;
+        if (tipo === "sucesso") {
+          bgColor = "bg-green-600";
+          icone = `<svg class="w-5 h-5 mr-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+        } else if (tipo === "erro") {
+          bgColor = "bg-red-600";
+          icone = `<svg class="w-5 h-5 mr-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+        } else {
+          bgColor = "bg-blue-600";
+          icone = `<svg class="w-5 h-5 mr-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+        }
+
+        toast.className = `toast-enter flex items-center p-4 w-72 md:w-80 rounded-lg shadow-xl text-white font-medium text-sm ${bgColor}`;
+        toast.innerHTML = `${icone} <span>${mensagem}</span>`;
+
+        container.appendChild(toast);
+
+        // Remove o toast suavemente após 3.5 segundos
+        setTimeout(() => {
+          toast.classList.replace("toast-enter", "toast-exit");
+          setTimeout(() => {
+            toast.remove();
+          }, 300); // Aguarda animação CSS terminar
+        }, 3500);
+      }
+
+      // --- VARIÁVEIS GLOBAIS ---
+      let listaCli = [];
+      let idClienteParaExcluir = null; // Variável para guardar qual ID será apagado no Modal
+
       // --- NAVEGAÇÃO SPA ---
       function navegarPara(tela) {
         document
@@ -383,7 +514,6 @@
           .forEach((el) => el.classList.remove("active"));
         document.getElementById(`view-${tela}`).classList.add("active");
 
-        // Ações automáticas ao entrar na tela
         if (tela === "dashboard") carregarDashboard();
         if (tela === "clientes") carregarListaClientes();
       }
@@ -402,85 +532,249 @@
               document.getElementById("dash-vencidas").innerText =
                 res.dados.vencidas;
             } else {
-              alert("Erro ao carregar Dashboard: " + res.mensagem);
+              mostrarToast(
+                "Erro ao carregar Dashboard: " + res.mensagem,
+                "erro",
+              );
             }
           })
           .getResumoFinanceiro();
       }
 
       // --- FUNÇÕES DE CLIENTES ---
+
+      // NOVA FUNÇÃO: Gera o próximo ID baseado nos "CLI-" já existentes
+      function gerarProximoId() {
+        if (!listaCli || listaCli.length === 0) return "CLI-1";
+        let maxNum = 0;
+        listaCli.forEach((c) => {
+          const idStr = String(c.id).trim();
+          if (idStr.startsWith("CLI-")) {
+            const num = parseInt(idStr.replace("CLI-", ""), 10);
+            if (!isNaN(num) && num > maxNum) {
+              maxNum = num;
+            }
+          }
+        });
+        return `CLI-${maxNum + 1}`;
+      }
+
+      function limparFormularioCliente() {
+        document
+          .querySelectorAll("#view-clientes input")
+          .forEach((i) => (i.value = ""));
+        document.getElementById("cli-cidade").value = "Taubaté";
+
+        // Auto-preenche com o novo ID formatado
+        document.getElementById("cli-id").value = gerarProximoId();
+
+        document.getElementById("cli-id").removeAttribute("readonly");
+        document
+          .getElementById("cli-id")
+          .classList.remove("bg-slate-100", "text-slate-500");
+
+        const btnSalvar = document.getElementById("btnSalvarCliente");
+        btnSalvar.innerText = "Salvar Cadastro";
+        btnSalvar.classList.replace("bg-blue-600", "bg-green-600");
+        btnSalvar.classList.replace("hover:bg-blue-700", "hover:bg-green-700");
+        btnSalvar.disabled = false;
+
+        document.getElementById("btnCancelarCliente").classList.add("hidden");
+      }
+
       function salvarNovoCliente() {
         const btn = document.getElementById("btnSalvarCliente");
-        const dados = {
-          id: document.getElementById("cli-id").value,
-          descricao: document.getElementById("cli-nome").value,
-          celular: document.getElementById("cli-celular").value,
-          cidade: document.getElementById("cli-cidade").value,
-          bairro: document.getElementById("cli-bairro").value,
-          endereco: document.getElementById("cli-endereco").value,
-        };
 
-        if (!dados.id || !dados.descricao) {
-          alert("Atenção: ID e Nome são obrigatórios.");
+        const nomeDigitado = String(
+          document.getElementById("cli-nome").value,
+        ).trim();
+        const celularDigitado = String(
+          document.getElementById("cli-celular").value,
+        ).trim();
+        let idDigitado = String(document.getElementById("cli-id").value).trim();
+
+        if (!idDigitado || !nomeDigitado) {
+          mostrarToast("Atenção: ID e Nome são obrigatórios.", "erro");
           return;
         }
+
+        // --- LÓGICA DE VERIFICAÇÃO NOME + CELULAR ---
+        // Verifica se o formulário não está bloqueado em modo de edição e o celular não está vazio
+        const isEditando = document
+          .getElementById("cli-id")
+          .hasAttribute("readonly");
+        if (!isEditando && celularDigitado !== "") {
+          // Busca um cliente com o mesmo nome e celular
+          const clienteExistente = listaCli.find(
+            (c) =>
+              c.descricao.toLowerCase() === nomeDigitado.toLowerCase() &&
+              c.celular === celularDigitado,
+          );
+
+          if (clienteExistente) {
+            // Se encontrou, em vez de criar um ID novo, assumimos o ID antigo para acionar a Atualização (Upsert)
+            idDigitado = clienteExistente.id;
+            mostrarToast("Cliente encontrado! Atualizando cadastro...", "info");
+          }
+        }
+
+        const dados = {
+          id: idDigitado,
+          descricao: nomeDigitado,
+          celular: celularDigitado,
+          cidade: String(document.getElementById("cli-cidade").value).trim(),
+          bairro: String(document.getElementById("cli-bairro").value).trim(),
+          endereco: String(
+            document.getElementById("cli-endereco").value,
+          ).trim(),
+        };
 
         btn.disabled = true;
         btn.innerText = "Salvando...";
 
         google.script.run
           .withSuccessHandler((res) => {
-            alert(res.mensagem);
-            btn.disabled = false;
-            btn.innerText = "Salvar Cadastro";
-            document
-              .querySelectorAll("#view-clientes input")
-              .forEach((i) => (i.value = ""));
-            document.getElementById("cli-cidade").value = "Taubaté"; // Valor padrão
+            mostrarToast(res.mensagem, "sucesso");
+            limparFormularioCliente();
             carregarListaClientes();
           })
           .salvarCliente(dados);
       }
 
       function carregarListaClientes() {
-        const tbody = document.getElementById("tabela-clientes");
+        const tbody = document.getElementById("tabela-cli");
         tbody.innerHTML =
           '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-sm">Atualizando banco de dados...</td></tr>';
 
         google.script.run
           .withSuccessHandler((res) => {
             if (res.sucesso && res.dados.length > 0) {
-              tbody.innerHTML = res.dados
-                .map(
-                  (c) => `
-                <tr class="hover:bg-slate-100 transition-colors border-b border-slate-100">
-                  <td class="p-3 font-mono font-bold text-blue-600 text-xs">${c.id}</td>
-                  <td class="p-3 font-medium text-slate-800 text-sm">${c.descricao}</td>
-                  <td class="p-3 text-slate-500 text-sm">${c.cidade || "-"}</td>
-                  <td class="p-3 text-center">
-                    <button onclick="excluirCli('${c.id}', '${c.descricao}')" class="text-red-500 hover:text-red-700 text-xs font-bold">Excluir</button>
-                  </td>
-                </tr>
-              `,
-                )
-                .join("");
+              listaCli = res.dados;
+              renderizarTabelaClientes(listaCli);
             } else {
+              listaCli = [];
               tbody.innerHTML =
                 '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-sm">Nenhum cliente encontrado.</td></tr>';
+            }
+
+            // Auto-preenche o ID caso o usuário não esteja editando um cliente
+            if (!document.getElementById("cli-id").hasAttribute("readonly")) {
+              document.getElementById("cli-id").value = gerarProximoId();
             }
           })
           .listarClientes();
       }
 
-      function excluirCli(id, nome) {
-        if (confirm(`Deseja realmente remover o cliente ${nome}?`)) {
-          google.script.run
-            .withSuccessHandler((res) => {
-              alert(res.mensagem);
-              carregarListaClientes();
-            })
-            .eliminarCliente(id);
+      function renderizarTabelaClientes(lista) {
+        const corpo = document.getElementById("tabela-cli");
+        if (lista.length === 0) {
+          corpo.innerHTML =
+            '<tr><td colspan="4" class="p-10 text-center text-slate-400">Nenhum cliente encontrado na pesquisa.</td></tr>';
+          return;
         }
+        corpo.innerHTML = lista
+          .map(
+            (c) => `
+          <tr class="hover:bg-slate-50 transition-colors group border-b border-slate-100">
+              <td class="p-4 font-mono font-bold text-blue-600 text-sm">${c.id}</td>
+              <td class="p-4 font-medium text-slate-800 text-sm">${c.descricao}</td>
+              <td class="p-4 text-slate-500 text-sm">${c.cidade || "-"}</td>
+              <td class="p-4 text-center flex justify-center gap-2">
+                  <button onclick="editarCliente('${c.id}')" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-blue-600 hover:text-white transition-all shadow-sm">EDITAR</button>
+                  <button onclick="abrirModalExclusao('${c.id}', '${c.descricao}')" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm">EXCLUIR</button>
+              </td>
+          </tr>
+        `,
+          )
+          .join("");
+      }
+
+      function filtrarClientes() {
+        const termo = document.getElementById("filtro-cli").value.toLowerCase();
+        if (termo === "") {
+          renderizarTabelaClientes(listaCli);
+          return;
+        }
+        const filtrados = listaCli.filter(
+          (c) =>
+            c.descricao.toLowerCase().includes(termo) ||
+            c.id.toString().includes(termo) ||
+            (c.cidade && c.cidade.toLowerCase().includes(termo)),
+        );
+        renderizarTabelaClientes(filtrados);
+      }
+
+      function editarCliente(id) {
+        const cliente = listaCli.find((c) => c.id.toString() === id.toString());
+        if (cliente) {
+          document.getElementById("cli-id").value = cliente.id;
+          document.getElementById("cli-nome").value = cliente.descricao;
+          document.getElementById("cli-celular").value = cliente.celular;
+          document.getElementById("cli-cidade").value = cliente.cidade;
+          document.getElementById("cli-bairro").value = cliente.bairro;
+          document.getElementById("cli-endereco").value = cliente.endereco;
+
+          document.getElementById("cli-id").setAttribute("readonly", true);
+          document
+            .getElementById("cli-id")
+            .classList.add("bg-slate-100", "text-slate-500");
+
+          const btnSalvar = document.getElementById("btnSalvarCliente");
+          btnSalvar.innerText = "Atualizar Cadastro";
+          btnSalvar.classList.replace("bg-green-600", "bg-blue-600");
+          btnSalvar.classList.replace(
+            "hover:bg-green-700",
+            "hover:bg-blue-700",
+          );
+
+          document
+            .getElementById("btnCancelarCliente")
+            .classList.remove("hidden");
+          document
+            .getElementById("cli-id")
+            .scrollIntoView({ behavior: "smooth" });
+        }
+      }
+
+      // --- FUNÇÕES DO MODAL DE EXCLUSÃO ---
+      function abrirModalExclusao(id, nome) {
+        idClienteParaExcluir = id;
+        document.getElementById("msg-exclusao-modal").innerHTML =
+          `Deseja realmente remover o cliente <b>${nome}</b>?`;
+
+        const modal = document.getElementById("modal-exclusao");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+
+      function fecharModalExclusao() {
+        idClienteParaExcluir = null;
+        const modal = document.getElementById("modal-exclusao");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+
+      function confirmarExclusao() {
+        if (!idClienteParaExcluir) return;
+
+        const idSalvo = idClienteParaExcluir; // Salva o ID antes de fechar o modal
+        fecharModalExclusao(); // Esconde o modal imediatamente (e anula a variável global)
+
+        mostrarToast("Processando exclusão...", "info"); // Usamos "info" para aparecer azulzinho
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res && res.sucesso) {
+              mostrarToast(res.mensagem, "sucesso");
+              carregarListaClientes();
+            } else {
+              mostrarToast(res.mensagem || "Erro ao excluir", "erro");
+            }
+          })
+          .withFailureHandler((err) => {
+            mostrarToast("Erro técnico: " + (err.message || err), "erro");
+          })
+          .eliminarCliente(idSalvo); // Passamos a nossa cópia segura!
       }
 
       // --- FUNÇÕES FINANCEIRO ---
@@ -499,7 +793,6 @@
           return;
         }
 
-        // Lógica de cálculo (Aquela mesma que você fez os Testes Unitários!)
         const valorBase = Math.floor((valorTotal / qtd) * 100) / 100;
         const resto = parseFloat((valorTotal - valorBase * qtd).toFixed(2));
 
@@ -534,8 +827,8 @@
 
       function salvarVenda() {
         const venda = {
-          idVenda: document.getElementById("fin-idVenda").value,
-          cliente: document.getElementById("fin-cliente").value,
+          idVenda: String(document.getElementById("fin-idVenda").value).trim(),
+          cliente: String(document.getElementById("fin-cliente").value).trim(),
           valorTotal: parseFloat(document.getElementById("fin-valor").value),
           formaPagamento: document.getElementById("fin-parcelas").value + "x",
           saldoDevedor: parseFloat(document.getElementById("fin-valor").value),
@@ -548,7 +841,7 @@
           !venda.valorTotal ||
           parcelasAtuais.length === 0
         ) {
-          alert("Preencha ID, Cliente e Valor corretamente.");
+          mostrarToast("Preencha ID, Cliente e Valor corretamente.", "erro");
           return;
         }
 
@@ -558,17 +851,16 @@
 
         google.script.run
           .withSuccessHandler((res) => {
-            alert(res.mensagem);
+            mostrarToast(res.mensagem, "sucesso");
             btn.disabled = false;
             btn.innerText = "Gravar Lançamento";
-            // Limpar formulário
             document
               .querySelectorAll("#view-financeiro input")
               .forEach((i) => (i.value = ""));
             document.getElementById("lista-parcelas").innerHTML = "";
           })
           .withFailureHandler((err) => {
-            alert("Erro técnico: " + err);
+            mostrarToast("Erro técnico: " + err, "erro");
             btn.disabled = false;
             btn.innerText = "Gravar Lançamento";
           })

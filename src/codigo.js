@@ -115,17 +115,46 @@ function salvarCliente(dados) {
       aba.appendRow(["ID", "Descrição", "Endereço", "Bairro", "Cidade", "Celular"]);
     }
 
-    // Usando appendRow (Inserção rápida)
-    aba.appendRow([
-      dados.id, 
-      dados.descricao, 
-      dados.endereco, 
-      dados.bairro, 
-      dados.cidade, 
-      dados.celular
-    ]);
+    // O SEGREDO ESTÁ AQUI: getDisplayValues() puxa tudo como string (texto puro),
+    // igualzinho ao que está visível na célula, evitando erros de formatação de CPF/Número
+    const valores = aba.getDataRange().getDisplayValues();
+    let linhaExistente = -1;
     
-    return { sucesso: true, mensagem: "Cliente salvo com sucesso!" };
+    // Garante que a busca é feita sem espaços nas pontas
+    const idBusca = String(dados.id).trim();
+
+    for (let i = 1; i < valores.length; i++) {
+      if (String(valores[i][0]).trim() === idBusca) {
+        linhaExistente = i + 1; // +1 porque array em JS começa no 0 e a planilha começa na linha 1
+        break;
+      }
+    }
+
+    if (linhaExistente > -1) {
+      // 🔄 ATUALIZAÇÃO DE REGISTRO EXISTENTE
+      aba.getRange(linhaExistente, 1, 1, 6).setValues([[
+        idBusca, 
+        dados.descricao, 
+        dados.endereco, 
+        dados.bairro, 
+        dados.cidade, 
+        dados.celular
+      ]]);
+      return { sucesso: true, mensagem: "Cadastro atualizado com sucesso!" };
+      
+    } else {
+      // ➕ INSERÇÃO DE NOVO REGISTRO
+      aba.appendRow([
+        idBusca, 
+        dados.descricao, 
+        dados.endereco, 
+        dados.bairro, 
+        dados.cidade, 
+        dados.celular
+      ]);
+      return { sucesso: true, mensagem: "Novo cliente salvo com sucesso!" };
+    }
+    
   } catch (e) { 
     return { sucesso: false, mensagem: e.message }; 
   }
