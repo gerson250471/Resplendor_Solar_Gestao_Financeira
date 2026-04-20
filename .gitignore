@@ -35,5 +35,7 @@ logs
 .temp
 
 # --- Configurações de IDE (VS Code) ---
-
 .vscode/
+
+# Cópia do Readme em pdf
+readme.pdf
