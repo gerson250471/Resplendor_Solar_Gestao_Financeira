@@ -15,39 +15,30 @@ function doGet(e) {
   return output;
 }
 
-// 🚀 NOVA FUNÇÃO DE MODULARIZAÇÃO
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
 /**
  * --- LÓGICA DE INDICADORES (DASHBOARD) ---
+ * Padronizado para somar estritamente a aba Parcelas para evitar dízimas
  */
 function getResumoFinanceiro() {
   try {
-    // 🚀 Atualiza os status antes de contar
     atualizarStatusParcelas(); 
     
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const abaVendas = ss.getSheetByName("Vendas");
     const abaParcelas = ss.getSheetByName("Parcelas");
+    const abaVendas = ss.getSheetByName("Vendas");
     const hoje = new Date();
     
-    let total = 0, vendasMes = 0;
+    let totalAcumulado = 0;
+    let vendasMes = 0;
     let qtdAberto = 0, qtdUrgente = 0, qtdAtraso = 0;
 
     if (abaVendas) {
       const dv = abaVendas.getDataRange().getValues();
       for (let i = 1; i < dv.length; i++) {
-        let valorCru = dv[i][5]; // Saldo Devedor
-        let saldo = 0;
-        if (typeof valorCru === 'number') {
-          saldo = valorCru;
-        } else if (valorCru) {
-          saldo = parseFloat(String(valorCru).replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''));
-        }
-        total += isNaN(saldo) ? 0 : saldo;
-
         let dataVenda = new Date(dv[i][2]);
         if (dataVenda instanceof Date && !isNaN(dataVenda.getTime())) {
           if (dataVenda.getMonth() === hoje.getMonth() && dataVenda.getFullYear() === hoje.getFullYear()) {
@@ -60,22 +51,28 @@ function getResumoFinanceiro() {
     if (abaParcelas) {
       const dp = abaParcelas.getDataRange().getValues();
       for (let i = 1; i < dp.length; i++) {
-        const status = dp[i][4];
-        if (status === "EM ABERTO") qtdAberto++;
-        if (status === "URGENTE") qtdUrgente++;
-        if (status === "EM ATRASO") qtdAtraso++;
+        const status = dp[i][4]; 
+        const valorRaw = dp[i][3]; 
+        
+        if (status !== "PAGO") {
+          let valor = parseFloat(valorRaw);
+          if (!isNaN(valor)) {
+            totalAcumulado += Math.round(valor * 100);
+          }
+          
+          if (status === "EM ABERTO") qtdAberto++;
+          if (status === "URGENTE") qtdUrgente++;
+          if (status === "Em Atraso") qtdAtraso++;
+        }
       }
     }
 
-    const totalFormatado = new Intl.NumberFormat('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(total);
+    const saldoFinal = totalAcumulado / 100;
 
     return { 
       sucesso: true, 
       dados: { 
-        total: totalFormatado, 
+        total: saldoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), 
         vendasMes: vendasMes, 
         aberto: qtdAberto,
         urgente: qtdUrgente,
@@ -95,13 +92,11 @@ function salvarCliente(dados) {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     let aba = ss.getSheetByName("Clientes");
 
-    // Cria a aba se não existir
     if (!aba) {
       aba = ss.insertSheet("Clientes");
       aba.appendRow(["ID", "Descrição", "Endereço", "Bairro", "Cidade", "Celular"]);
     }
 
-    // Usando appendRow (Inserção rápida)
     aba.appendRow([
       dados.id,
       dados.descricao,
@@ -124,9 +119,8 @@ function listarClientes() {
     if (!aba) return { sucesso: true, dados: [] };
 
     const valores = aba.getDataRange().getValues();
-    const cabecalho = valores.shift(); // Remove a primeira linha
+    valores.shift(); 
 
-    // Mapeia o array 2D para um array de objetos (Melhor prática em JS)
     const clientes = valores.map(linha => ({
       id: linha[0],
       descricao: linha[1],
@@ -148,7 +142,6 @@ function eliminarCliente(id) {
     const aba = ss.getSheetByName("Clientes");
     const valores = aba.getDataRange().getValues();
 
-    // Loop de trás para frente é mais seguro ao deletar linhas
     for (let i = valores.length - 1; i >= 1; i--) {
       if (valores[i][0].toString() === id.toString()) {
         aba.deleteRow(i + 1);
@@ -170,15 +163,13 @@ function obterProximoIdVenda() {
     const abaVendas = ss.getSheetByName("Vendas");
     const anoAtual = new Date().getFullYear();
 
-    // Se a aba Vendas não existir, retornamos a venda nº 1
     if (!abaVendas) return { sucesso: true, id: `VEN-${anoAtual}-001` };
 
     const dv = abaVendas.getDataRange().getValues();
     let contagemAno = 0;
 
-    // Loop para encontrar todas as vendas do ano atual
     for (let i = 1; i < dv.length; i++) {
-      const dataVenda = new Date(dv[i][2]); // Índice 2 é a Data da Venda
+      const dataVenda = new Date(dv[i][2]);
       if (dataVenda instanceof Date && !isNaN(dataVenda.getTime())) {
         if (dataVenda.getFullYear() === anoAtual) {
           contagemAno++;
@@ -186,7 +177,6 @@ function obterProximoIdVenda() {
       }
     }
 
-    // Calcula o próximo número e formata com 3 zeros (ex: 001, 015, 102)
     const proximoNumero = contagemAno + 1;
     const numeroFormatado = proximoNumero.toString().padStart(3, '0');
 
@@ -196,43 +186,22 @@ function obterProximoIdVenda() {
   }
 }
 
-/**
- * --- LANÇAMENTO DE VENDAS ---
- */
 function processarGravacao(venda, parcelas) {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     let abaVendas = ss.getSheetByName("Vendas");
 
-    // Se a aba Vendas não existir, cria com os cabeçalhos EXATOS informados
     if (!abaVendas) {
       abaVendas = ss.insertSheet("Vendas");
-      abaVendas.appendRow([
-        "ID Venda",
-        "CLIENTES DEVEDORES",
-        "Data venda",
-        "Valor Total",
-        "Forma Pagamento",
-        "Saldo Devedor",
-        "Status"
-      ]);
+      abaVendas.appendRow(["ID Venda", "CLIENTES DEVEDORES", "Data venda", "Valor Total", "Forma Pagamento", "Saldo Devedor", "Status"]);
     }
 
     let abaParcelas = ss.getSheetByName("Parcelas");
-
-    // Se a aba Parcelas não existir, cria com os cabeçalhos EXATOS informados
     if (!abaParcelas) {
       abaParcelas = ss.insertSheet("Parcelas");
-      abaParcelas.appendRow([
-        "ID Venda",
-        "Número",
-        "Vencimento",
-        "Valor",
-        "Status"
-      ]);
+      abaParcelas.appendRow(["ID Venda", "Número", "Vencimento", "Valor", "Status"]);
     }
 
-    // Grava a Venda (A ordem do array bate exatamente com as colunas)
     abaVendas.appendRow([
       venda.idVenda,
       venda.cliente,
@@ -243,16 +212,8 @@ function processarGravacao(venda, parcelas) {
       venda.status
     ]);
 
-    // Grava as Parcelas em lote (Muito mais rápido)
     if (parcelas && parcelas.length > 0) {
-      const dadosParcelas = parcelas.map(p => [
-        venda.idVenda,
-        p.numero,
-        p.vencimento,
-        p.valor,
-        p.status
-      ]);
-
+      const dadosParcelas = parcelas.map(p => [venda.idVenda, p.numero, p.vencimento, p.valor, p.status]);
       const ultimaLinha = abaParcelas.getLastRow() + 1;
       abaParcelas.getRange(ultimaLinha, 1, dadosParcelas.length, 5).setValues(dadosParcelas);
     }
@@ -266,7 +227,6 @@ function processarGravacao(venda, parcelas) {
 /**
  * --- CONFIRMAÇÃO DE PAGAMENTOS ---
  */
-
 function listarParcelasPendentes() {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -275,19 +235,17 @@ function listarParcelasPendentes() {
 
     if (!abaVendas || !abaParcelas) return { sucesso: true, dados: [] };
 
-    // 1. Mapear clientes por ID da Venda (para mostrar o nome na tela)
     const valVendas = abaVendas.getDataRange().getValues();
     const mapaClientes = {};
     for (let i = 1; i < valVendas.length; i++) {
-      mapaClientes[valVendas[i][0]] = valVendas[i][1]; // ID Venda -> Cliente
+      mapaClientes[valVendas[i][0]] = valVendas[i][1]; 
     }
 
-    // 2. Buscar parcelas pendentes
     const valParcelas = abaParcelas.getDataRange().getValues();
     const pendentes = [];
 
     for (let i = 1; i < valParcelas.length; i++) {
-      if (valParcelas[i][4] !== "PAGO") { // Se não estiver pago
+      if (valParcelas[i][4] !== "PAGO") {
         let vencimento = valParcelas[i][2];
         if (vencimento instanceof Date) {
           vencimento = vencimento.toISOString().split('T')[0];
@@ -304,9 +262,7 @@ function listarParcelasPendentes() {
       }
     }
 
-    // Ordenar pelas datas de vencimento mais antigas primeiro
     pendentes.sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento));
-
     return { sucesso: true, dados: pendentes };
   } catch (e) {
     return { sucesso: false, mensagem: e.message };
@@ -319,31 +275,28 @@ function confirmarPagamentoParcela(idVenda, numeroParcela) {
     const abaParcelas = ss.getSheetByName("Parcelas");
     const abaVendas = ss.getSheetByName("Vendas");
 
-    // 1. Atualizar o status da Parcela
     const valParcelas = abaParcelas.getDataRange().getValues();
     let valorPago = 0;
 
     for (let i = 1; i < valParcelas.length; i++) {
       if (valParcelas[i][0].toString() === idVenda.toString() && valParcelas[i][1].toString() === numeroParcela.toString()) {
-        abaParcelas.getRange(i + 1, 5).setValue("PAGO"); // Coluna E (Status)
-        valorPago = parseFloat(valParcelas[i][3]); // Coluna D (Valor)
+        abaParcelas.getRange(i + 1, 5).setValue("PAGO");
+        valorPago = parseFloat(valParcelas[i][3]);
         break;
       }
     }
 
-    // 2. Abater o Saldo Devedor na Venda
     if (valorPago > 0) {
       const valVendas = abaVendas.getDataRange().getValues();
       for (let i = 1; i < valVendas.length; i++) {
         if (valVendas[i][0].toString() === idVenda.toString()) {
-          let saldoAtual = parseFloat(valVendas[i][5]); // Coluna F (Saldo Devedor)
-          let novoSaldo = saldoAtual - valorPago;
+          let saldoAtual = Math.round(parseFloat(valVendas[i][5]) * 100);
+          let abatimento = Math.round(valorPago * 100);
+          let novoSaldo = (saldoAtual - abatimento) / 100;
 
-          if (novoSaldo <= 0.01) novoSaldo = 0; // Trata dízimas perdidas
+          if (novoSaldo < 0.01) novoSaldo = 0; 
+          abaVendas.getRange(i + 1, 6).setValue(novoSaldo);
 
-          abaVendas.getRange(i + 1, 6).setValue(novoSaldo); // Atualiza Saldo
-
-          // Se quitou tudo, conclui a venda
           if (novoSaldo === 0) {
             abaVendas.getRange(i + 1, 7).setValue("CONCLUÍDO");
           }
@@ -352,74 +305,128 @@ function confirmarPagamentoParcela(idVenda, numeroParcela) {
       }
     }
 
-    return { sucesso: true, mensagem: "Pagamento confirmado com sucesso!" };
+    return { sucesso: true, mensagem: "Pagamento confirmado!" };
   } catch (e) {
     return { sucesso: false, mensagem: e.message };
   }
 }
 
 /**
- * --- ATUALIZAÇÃO AUTOMÁTICA DE STATUS DAS PARCELAS ---
+ * --- ATUALIZAÇÃO AUTOMÁTICA DE STATUS ---
  */
 function atualizarStatusParcelas() {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const abaParcelas = ss.getSheetByName("Parcelas");
-    
     if (!abaParcelas) return false;
     
     const dados = abaParcelas.getDataRange().getValues();
-    
-    // Configurar a data de "Hoje" para meia-noite (para comparar apenas os dias, ignorando as horas)
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     
     let alteracoes = 0;
-    
-    // Criamos um array para armazenar a coluna de Status inteira
-    const colunaStatus = [];
-    colunaStatus.push([dados[0][4]]); // Mantém o cabeçalho "Status" intacto
+    const colunaStatus = [[dados[0][4]]]; 
     
     for (let i = 1; i < dados.length; i++) {
       let statusAtual = dados[i][4];
       let dataVenc = new Date(dados[i][2]);
       let novoStatus = statusAtual;
       
-      // Regra 1: Se já estiver PAGO, o sistema não mexe!
       if (statusAtual !== "PAGO") {
         if (dataVenc instanceof Date && !isNaN(dataVenc.getTime())) {
-          dataVenc.setHours(0, 0, 0, 0); // Zera as horas para cálculo perfeito
+          dataVenc.setHours(0, 0, 0, 0);
+          const diffDias = Math.ceil((dataVenc.getTime() - hoje.getTime()) / (1000 * 3600 * 24));
           
-          // Cálculo de diferença de dias (Matemática de Datas em JS)
-          const diffTempo = dataVenc.getTime() - hoje.getTime();
-          const diffDias = Math.ceil(diffTempo / (1000 * 3600 * 24)); // Converte milissegundos para dias
+          if (diffDias < 0) novoStatus = "Em Atraso";
+          else if (diffDias <= 10) novoStatus = "URGENTE";
+          else novoStatus = "EM ABERTO";
           
-          // Aplicando a sua regra de negócio:
-          if (diffDias < 0) {
-            novoStatus = "Em Atraso";
-          } else if (diffDias <= 10) {
-            novoStatus = "URGENTE";
-          } else {
-            novoStatus = "EM ABERTO";
-          }
-          
-          // Verifica se houve mudança para contabilizar
           if (novoStatus !== statusAtual) alteracoes++;
         }
       }
-      
-      // Adiciona o status (novo ou antigo) na lista
       colunaStatus.push([novoStatus]);
     }
     
-    // Regra de Ouro da Performance: Só escreve na planilha se houver mudanças
     if (alteracoes > 0) {
       abaParcelas.getRange(1, 5, colunaStatus.length, 1).setValues(colunaStatus);
     }
-    
     return true;
   } catch (e) {
-    console.error("Erro ao atualizar status: " + e.message);
     return false;
+  }
+}
+
+/**
+ * --- FUNÇÃO DE AUDITORIA: RECALCULAR SALDO DEVEDOR ---
+ * Esta função sincroniza o saldo da aba 'Vendas' com a soma real
+ * das parcelas não pagas na aba 'Parcelas'.
+ */
+/**
+ * --- FUNÇÃO DE AUDITORIA: VALOR DA COMPRA - PARCELAS PAGAS ---
+ */
+function recalcularSaldosVendas() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const abaVendas = ss.getSheetByName("Vendas");
+    const abaParcelas = ss.getSheetByName("Parcelas");
+    
+    if (!abaVendas || !abaParcelas) return "Erro: Abas não encontradas.";
+
+    const dadosVendas = abaVendas.getDataRange().getValues();
+    const dadosParcelas = abaParcelas.getDataRange().getValues();
+    
+    let correcoesRealizadas = 0;
+
+    // 1. Mapear o total já PAGO e se existe algum atraso real
+    const mapaFinanceiro = {};
+
+    for (let i = 1; i < dadosParcelas.length; i++) {
+      const idVenda = dadosParcelas[i][0];
+      const valorParcela = parseFloat(dadosParcelas[i][3]) || 0;
+      const statusParc = dadosParcelas[i][4];
+
+      if (!mapaFinanceiro[idVenda]) {
+        mapaFinanceiro[idVenda] = { totalPago: 0, temAtraso: false };
+      }
+
+      if (statusParc === "PAGO") {
+        // Soma o que já foi para o bolso do cliente
+        mapaFinanceiro[idVenda].totalPago += Math.round(valorParcela * 100);
+      } else if (statusParc === "Em Atraso") {
+        // Marca se existe o "perigo" do atraso
+        mapaFinanceiro[idVenda].temAtraso = true;
+      }
+    }
+
+    // 2. Aplicar a regra: Valor Total - Pago
+    for (let j = 1; j < dadosVendas.length; j++) {
+      const idVendaVenda = dadosVendas[j][0];
+      const valorCompra = Math.round(parseFloat(dadosVendas[j][3]) * 100); // Coluna D (Valor Total)
+      const infoFinanceira = mapaFinanceiro[idVendaVenda] || { totalPago: 0, temAtraso: false };
+      
+      const saldoDevedorReal = (valorCompra - infoFinanceira.totalPago) / 100;
+      const statusAtual = dadosVendas[j][6];
+      
+      let novoStatus = "EM ABERTO";
+      
+      if (saldoDevedorReal <= 0) {
+        novoStatus = "CONCLUÍDO";
+      } else if (infoFinanceira.temAtraso) {
+        novoStatus = "EM ATRASO";
+      }
+
+      // Só atualiza se o saldo ou o status estiverem divergentes
+      const saldoGravado = parseFloat(dadosVendas[j][5]);
+      if (Math.abs(saldoGravado - saldoDevedorReal) > 0.001 || statusAtual !== novoStatus) {
+        abaVendas.getRange(j + 1, 6).setValue(saldoDevedorReal); // Coluna F (Saldo Devedor)
+        abaVendas.getRange(j + 1, 7).setValue(novoStatus);      // Coluna G (Status)
+        correcoesRealizadas++;
+      }
+    }
+
+    return { sucesso: true, mensagem: `Sincronização concluída. ${correcoesRealizadas} vendas ajustadas.` };
+
+  } catch (e) {
+    return { sucesso: false, mensagem: e.message };
   }
 }

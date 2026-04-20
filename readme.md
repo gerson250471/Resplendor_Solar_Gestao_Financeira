@@ -1,8 +1,6 @@
 # ☀️ Sistema Financeiro e CRM - Resplendor Solar
 
-Sistema de gestão centralizada de alto desempenho, desenvolvido para a **Resplendor Solar**. Esta aplicação atua como um CRM (Customer Relationship Management) integrado a um controle financeiro de lançamentos e baixas de parcelas.
-
-O projeto utiliza uma arquitetura moderna de **Single Page Application (SPA)** dentro do ecossistema Google Workspace, garantindo uma experiência de usuário fluida, rápida e sem recarregamentos de página.
+Sistema de gestão centralizada de alto desempenho, desenvolvido para a **Resplendor Solar**. Esta aplicação atua como um CRM integrado a um controle financeiro de lançamentos e baixas de parcelas.
 
 ---
 
@@ -10,21 +8,32 @@ O projeto utiliza uma arquitetura moderna de **Single Page Application (SPA)** d
 
 - **📊 Dashboard Inteligente:** Monitoramento em tempo real de Saldo Total, Volume de Vendas Mensais e Alerta de Parcelas Vencidas.
 - **👥 CRM (Gestão de Clientes):** Cadastro robusto com validações de integridade, busca dinâmica e prevenção de duplicidade.
-- **💰 Lançamentos Financeiros:** Registro de vendas com geração automática de parcelas e travas de segurança para métodos de pagamento à vista.
-- **✅ Baixa de Parcelas:** Sistema de liquidação de débitos que atualiza automaticamente o saldo devedor e o status geral da venda na base de dados.
+- **💰 Lançamentos Financeiros:** Registro de vendas com geração automática de parcelas e travas de segurança.
+- **🔄 Auditoria de Saldos:** Função de recálculo automático para garantir que o saldo devedor seja sempre a prova de erros manuais.
 
 ---
 
-## 🛠️ Tecnologias e Arquitetura
+## ⚖️ Regras de Negócio e Integridade Financeira
 
-Este projeto foi desenvolvido utilizando as melhores práticas de modularização para **Google Apps Script**, permitindo o desenvolvimento local via **VS Code**.
+Para garantir a saúde financeira do sistema, a lógica de cálculo foi padronizada sob a **Regra de Ouro da Arrecadação**:
 
-- **Linguagens:** JavaScript (ES6+), HTML5, CSS3.
-- **Frameworks:** [Tailwind CSS](https://tailwindcss.com/) (Estilização UI).
-- **Ícones:** [Lucide Icons](https://lucide.dev/).
-- **Backend:** Google Apps Script (V8 Runtime).
-- **Database:** Google Sheets API.
-- **DevOps:** [CLASP](https://github.com/google/clasp) (Command Line Apps Script Projects).
+### 1. Cálculo do Saldo Devedor
+
+O sistema não apenas subtrai parcelas, ele audita a venda constantemente através da fórmula:
+
+> **Saldo Devedor = Valor Total da Venda - Somatória de Parcelas com Status "PAGO"**
+
+### 2. Hierarquia de Status da Venda
+
+O status da venda na aba principal é definido automaticamente seguindo esta prioridade:
+
+1.  **CONCLUÍDO:** Se o Saldo Devedor for igual a 0.
+2.  **EM ATRASO:** Se o Saldo Devedor for > 0 **E** existir pelo menos uma parcela com status "Em Atraso".
+3.  **EM ABERTO:** Se o Saldo Devedor for > 0, mas todas as parcelas a vencer estiverem em dia.
+
+### 3. Precisão Decimal
+
+Todos os cálculos internos multiplicam os valores por 100 antes do processamento e dividem por 100 no registro final, eliminando erros de arredondamento de ponto flutuante comuns em JavaScript.
 
 ---
 
@@ -32,13 +41,14 @@ Este projeto foi desenvolvido utilizando as melhores práticas de modularizaçã
 
 ```text
 📁 src
-├── 📄 appsscript.json  # Manifesto e configurações do projeto
-├── 📄 codigo.js        # Backend (Lógica de servidor e integração com Sheets)
-├── 📄 index.html       # Master Page (SPA Engine e Menu)
-├── 📄 dashboard.html   # Módulo: Painel de Indicadores
-├── 📄 clientes.html    # Módulo: Gestão de CRM
-├── 📄 financeiro.html  # Módulo: Lançamentos de Vendas
-└── 📄 pagamentos.html  # Módulo: Confirmação de Recebíveis
+├── 📄 appsscript.json  # Manifesto e configurações
+├── 📄 codigo.js        # Backend (Lógica de servidor e recálculos)
+├── 📄 index.html       # Master Page (SPA Engine)
+├── 📄 dashboard.html   # Painel de Indicadores
+├── 📄 clientes.html    # Gestão de CRM
+├── 📄 financeiro.html  # Lançamentos de Vendas
+├── 📄 pagamentos.html  # Confirmação de Recebíveis
+└── 📄 testes.js        # Unit Tests da lógica financeira
 ```
 
 ## 💻 Manual de Operação (CLI Clasp)

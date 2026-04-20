@@ -269,15 +269,34 @@
       }
 
       // --- INTEGRAÇÃO DASHBOARD -> PAGAMENTOS ---
+      // --- INTEGRAÇÃO DASHBOARD E COMBOBOX -> PAGAMENTOS ---
       function abrirFiltroStatus(status) {
         statusFiltroAtivo = status;
+
         const campoBusca = document.getElementById("filtro-pagamentos");
         if (campoBusca) campoBusca.value = ""; // Limpa a busca digitada
+
+        // Sincroniza o Combobox visualmente com o clique do Dashboard
+        const comboStatus = document.getElementById("filtro-status-pagamentos");
+        if (comboStatus) comboStatus.value = status;
+
         navegarPara("pagamentos");
       }
 
       function limparFiltroStatus() {
         statusFiltroAtivo = "";
+
+        // Limpa o Combobox
+        const comboStatus = document.getElementById("filtro-status-pagamentos");
+        if (comboStatus) comboStatus.value = "";
+
+        aplicarFiltrosPagamentos();
+      }
+
+      function mudarStatusCombobox() {
+        // Esta função roda quando o utilizador escolhe manualmente no Combobox
+        const comboStatus = document.getElementById("filtro-status-pagamentos");
+        statusFiltroAtivo = comboStatus ? comboStatus.value : "";
         aplicarFiltrosPagamentos();
       }
 
