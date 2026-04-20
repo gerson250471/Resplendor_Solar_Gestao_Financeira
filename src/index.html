@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Resplendor Solar - Master</title>
 
-    <!-- LINKS CORRIGIDOS: Sem colchetes e parêntesis indevidos -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
@@ -87,13 +86,11 @@
     </style>
   </head>
   <body class="flex h-screen overflow-hidden relative">
-    <!-- CONTÊINER DE TOASTS -->
     <div
       id="toast-container"
       class="fixed top-4 right-4 z-50 flex flex-col gap-3"
     ></div>
 
-    <!-- MODAL DE EXCLUSÃO -->
     <div
       id="modal-exclusao"
       class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity"
@@ -129,7 +126,6 @@
       </div>
     </div>
 
-    <!-- MENU LATERAL -->
     <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
       <div class="p-6">
         <h1 class="text-xl font-bold text-blue-400">Resplendor Solar</h1>
@@ -160,6 +156,13 @@
           ></i>
           Novo Lançamento
         </button>
+        <button
+          onclick="navegarPara('pagamentos')"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-left text-sm font-medium"
+        >
+          <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
+          Baixa de Parcelas
+        </button>
       </nav>
       <div
         class="p-4 border-t border-slate-800 text-xs text-center text-slate-500"
@@ -168,23 +171,15 @@
       </div>
     </aside>
 
-    <!-- ÁREA PRINCIPAL COM OS INCLUDES DO GOOGLE APPS SCRIPT -->
     <main class="flex-1 overflow-y-auto p-6 md:p-8">
-      <?!= include('dashboard'); ?> <?!= include('clientes'); ?>
+      <?!= include('dashboard'); ?> 
+      <?!= include('clientes'); ?>
+      <?!= include('financeiro'); ?> 
+      <?!= include('pagamentos'); ?>
 
-      <!-- 
-        Aqui seria o include('financeiro'). Mas como você pode estar testando o master, 
-        certifique-se de que o campo "Cliente" no financeiro.html (ou aqui caso use tudo junto)
-        contenha a propriedade list="clientes-list" na tag <input> e adicione o <datalist> logo a seguir,
-        como no exemplo abaixo (já modificado se você estiver a usar o módulo aqui):
-      -->
-      <?!= include('financeiro'); ?>
-
-      <!-- Datalist invisível usado para a sugestão de nomes no input de Vendas -->
       <datalist id="clientes-list"></datalist>
     </main>
 
-    <!-- SCRIPTS DE CONTROLE (O "CÉREBRO" DO FRONT-END) -->
     <script>
       lucide.createIcons();
 
@@ -220,6 +215,7 @@
       // --- VARIÁVEIS GLOBAIS ---
       let listaCli = [];
       let idClienteParaExcluir = null;
+      let listaPagamentos = []; // Adicionado aqui para centralizar as variáveis
 
       // --- NAVEGAÇÃO SPA ---
       function navegarPara(tela) {
@@ -231,6 +227,7 @@
         if (tela === "dashboard") carregarDashboard();
         if (tela === "clientes") carregarListaClientes();
         if (tela === "financeiro") carregarProximoIdVenda();
+        if (tela === "pagamentos") carregarParcelasPendentes(); 
       }
 
       // --- FUNÇÕES DO DASHBOARD ---
@@ -342,7 +339,6 @@
           .salvarCliente(dados);
       }
 
-      // NOVA FUNÇÃO: Atualiza a lista de opções nativas (Autocomplete)
       function atualizarDataListClientes(lista) {
         const datalist = document.getElementById("clientes-list");
         if (datalist) {
@@ -363,7 +359,7 @@
             if (res.sucesso && res.dados.length > 0) {
               listaCli = res.dados;
               if (tbody) renderizarTabelaClientes(listaCli);
-              atualizarDataListClientes(listaCli); // Alimenta o Autocomplete de Lançamentos
+              atualizarDataListClientes(listaCli);
             } else {
               listaCli = [];
               if (tbody)
@@ -601,7 +597,6 @@
           return;
         }
 
-        // --- VALIDAÇÃO SE CLIENTE EXISTE ---
         const clienteValido = listaCli.find(
           (c) =>
             c.descricao.toLowerCase() === nomeClienteDigitado.toLowerCase(),
@@ -612,15 +607,12 @@
             "Cliente não encontrado! Por favor, cadastre o cliente em 'Gestão de Clientes' antes de prosseguir.",
             "erro",
           );
-          // Opcional: Se quiser redirecionar automaticamente para a tela de clientes:
-          // navegarPara('clientes');
-          // document.getElementById('cli-nome').value = nomeClienteDigitado;
-          return; // Para a execução e não grava
+          return; 
         }
 
         const venda = {
           idVenda: idVenda,
-          cliente: clienteValido.descricao, // Usa o nome exato conforme está na base de dados
+          cliente: clienteValido.descricao,
           valorTotal: valorTotal,
           formaPagamento: `${metodoPagamento} (${textoParcelas})`,
           saldoDevedor: valorTotal,
@@ -637,7 +629,6 @@
             btn.disabled = false;
             btn.innerText = "Gravar Lançamento";
 
-            // Limpeza de formulário
             document
               .querySelectorAll("#view-financeiro input")
               .forEach((i) => (i.value = ""));
@@ -656,19 +647,59 @@
           .processarGravacao(venda, parcelasAtuais);
       }
 
-      // Inicializa Dashboard e configura os eventos ao carregar a página
-      window.onload = () => {
-        carregarDashboard();
+      // --- FUNÇÕES DE CONFIRMAÇÃO DE PAGAMENTO ---
+      function carregarParcelasPendentes() {
+        const tbody = document.getElementById("tabela-pagamentos");
+        if (tbody)
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="p-4 text-center text-slate-400 text-sm">Atualizando pendências...</td></tr>';
 
-        // Dispara a carga de clientes silenciosamente para preparar as validações e o Autocomplete
-        carregarListaClientes();
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res.sucesso && res.dados.length > 0) {
+              listaPagamentos = res.dados;
+              renderizarTabelaPagamentos(listaPagamentos);
+            } else {
+              listaPagamentos = [];
+              if (tbody)
+                tbody.innerHTML =
+                  '<tr><td colspan="6" class="p-10 text-center text-slate-400">Nenhuma parcela pendente encontrada. Aleluia!</td></tr>';
+            }
+          })
+          .listarParcelasPendentes();
+      }
 
-        // Adiciona o monitoramento automático ao campo de Forma de Pagamento
-        const selectMetodo = document.getElementById("fin-metodo");
-        if (selectMetodo) {
-          selectMetodo.addEventListener("change", verificarMetodoPagamento);
+      function renderizarTabelaPagamentos(lista) {
+        const corpo = document.getElementById("tabela-pagamentos");
+        if (!corpo) return;
+
+        if (lista.length === 0) {
+          corpo.innerHTML =
+            '<tr><td colspan="6" class="p-10 text-center text-slate-400">Nenhum resultado para a pesquisa.</td></tr>';
+          return;
         }
-      };
-    </script>
-  </body>
-</html>
+
+        corpo.innerHTML = lista
+          .map((p) => {
+            const [ano, mes, dia] = p.vencimento.split("-");
+            const dataBR = `${dia}/${mes}/${ano}`;
+            const valorFmt = parseFloat(p.valor).toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            });
+
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            const dataVenc = new Date(ano, mes - 1, dia);
+            const isAtrasado = dataVenc < hoje;
+            const corTextoData = isAtrasado
+              ? "text-red-600 font-bold"
+              : "text-slate-600";
+
+            return `
+          <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+              <td class="p-4 font-mono font-bold text-blue-600 text-sm">${p.idVenda}</td>
+              <td class="p-4 font-medium text-slate-800 text-sm">${p.cliente}</td>
+              <td class="p-4 text-slate-500 text-sm">Nº ${p.numero}</td>
+              <td class="p-4 text-sm ${corTextoData}">${dataBR} ${isAtrasado ? '<span class="text-[10px] bg-red-100 px-2 py-0.5 rounded ml-1 text-red-700">Atrasado</span>' : ""}</td>
+              <td class="p-4 text-right font-mono font-bold text-slate-800 text-sm">${valorFmt

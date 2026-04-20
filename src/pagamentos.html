@@ -1,0 +1,62 @@
+<section id="view-pagamentos" class="page-view">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-slate-800">Confirmação de Pagamentos</h2>
+    <button
+      onclick="carregarParcelasPendentes()"
+      class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+    >
+      <i data-lucide="refresh-cw" class="w-4 h-4 inline-block mr-1"></i>
+      Atualizar Lista
+    </button>
+  </div>
+
+  <div class="finance-card">
+    <div class="mb-4">
+      <input
+        type="text"
+        id="filtro-pagamentos"
+        onkeyup="filtrarPagamentos()"
+        placeholder="Pesquisar por Cliente ou ID da Venda..."
+        class="input-field max-w-md"
+      />
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-slate-50 border-y border-slate-200">
+            <th class="p-3 text-xs font-bold text-slate-500 uppercase">
+              ID Venda
+            </th>
+            <th class="p-3 text-xs font-bold text-slate-500 uppercase">
+              Cliente
+            </th>
+            <th class="p-3 text-xs font-bold text-slate-500 uppercase">
+              Parcela
+            </th>
+            <th class="p-3 text-xs font-bold text-slate-500 uppercase">
+              Vencimento
+            </th>
+            <th
+              class="p-3 text-xs font-bold text-slate-500 uppercase text-right"
+            >
+              Valor
+            </th>
+            <th
+              class="p-3 text-xs font-bold text-slate-500 uppercase text-center"
+            >
+              Ação
+            </th>
+          </tr>
+        </thead>
+        <tbody id="tabela-pagamentos">
+          <tr>
+            <td colspan="6" class="p-4 text-center text-slate-400 text-sm">
+              Carregando parcelas pendentes...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
