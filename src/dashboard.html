@@ -1,0 +1,30 @@
+<section id="view-dashboard" class="page-view active">
+  <h2 class="text-2xl font-bold text-slate-800 mb-6">Visão Geral</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="finance-card border-t-4 border-blue-500">
+      <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
+        Saldo Total
+      </h3>
+      <p class="text-3xl font-bold text-slate-800" id="dash-total">R$ 0,00</p>
+    </div>
+    <div class="finance-card border-t-4 border-green-500">
+      <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
+        Vendas no Mês
+      </h3>
+      <p class="text-3xl font-bold text-slate-800" id="dash-vendas">0</p>
+    </div>
+    <div class="finance-card border-t-4 border-red-500">
+      <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
+        Parcelas Vencidas
+      </h3>
+      <p class="text-3xl font-bold text-slate-800" id="dash-vencidas">0</p>
+    </div>
+  </div>
+  <button
+    onclick="carregarDashboard()"
+    class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+  >
+    <i data-lucide="refresh-cw" class="w-4 h-4 inline-block mr-2"></i>Atualizar
+    Dados
+  </button>
+</section>

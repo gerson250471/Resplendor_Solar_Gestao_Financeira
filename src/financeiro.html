@@ -1,0 +1,123 @@
+<section id="view-financeiro" class="page-view">
+  <h2 class="text-2xl font-bold text-slate-800 mb-6">
+    Novo Lançamento Financeiro
+  </h2>
+
+  <div class="finance-card max-w-3xl">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6">
+      <div class="md:col-span-4">
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
+          >ID da Venda (Automático)</label
+        >
+        <input
+          type="text"
+          id="fin-idVenda"
+          class="input-field font-mono font-bold text-blue-600 bg-slate-100"
+          placeholder="A gerar..."
+          readonly
+        />
+      </div>
+
+      <div class="md:col-span-8">
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
+          >Cliente</label
+        >
+        <!-- Com este bloqueio, nenhuma venda passará sem ter o cliente perfeitamente sincronizado com o CRM! Se tudo correr bem, pode avançar para o *commit*. -->
+        <input
+          type="text"
+          id="fin-cliente"
+          list="clientes-list"
+          class="input-field"
+          placeholder="Nome do Cliente (Selecione)"
+        />
+      </div>
+
+      <div class="md:col-span-4">
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
+          >Valor Total (R$)</label
+        >
+        <input
+          type="number"
+          id="fin-valor"
+          class="input-field"
+          placeholder="0.00"
+          onchange="gerarParcelas()"
+        />
+      </div>
+
+      <div class="md:col-span-4">
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
+          >Forma de Pagamento</label
+        >
+        <select id="fin-metodo" class="input-field">
+          <option value="BOLETO À VISTA">BOLETO À VISTA</option>
+          <option value="BOLETO PARCELADO">BOLETO PARCELADO</option>
+          <option value="CARTÃO À VISTA">CARTÃO À VISTA</option>
+          <option value="CARTÃO PARCELADO">CARTÃO PARCELADO</option>
+          <option value="CHEQUE">CHEQUE</option>
+          <option value="CREDIÁRIO">CREDIÁRIO</option>
+          <option value="ESPECIE / PIX">ESPECIE / PIX</option>
+        </select>
+      </div>
+
+      <div class="md:col-span-4">
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
+          >Nº Parcelas</label
+        >
+        <select
+          id="fin-parcelas"
+          class="input-field"
+          onchange="gerarParcelas()"
+        >
+          <option value="1">1x À VISTA</option>
+          <option value="2">2x SEM JUROS</option>
+          <option value="3">3x SEM JUROS</option>
+          <option value="4">4x SEM JUROS</option>
+          <option value="5">5x SEM JUROS</option>
+          <option value="6">6x SEM JUROS</option>
+          <option value="7">7x SEM JUROS</option>
+          <option value="8">8x SEM JUROS</option>
+          <option value="9">9x SEM JUROS</option>
+          <option value="10">10x SEM JUROS</option>
+          <option value="11">11x SEM JUROS</option>
+          <option value="12">12x SEM JUROS</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="border-t pt-4">
+      <h3 class="text-sm font-bold text-slate-700 mb-3">
+        Previsão de Parcelas
+      </h3>
+      <div class="bg-slate-50 rounded border p-4">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-slate-500 border-b">
+              <th class="pb-2">Nº</th>
+              <th class="pb-2">Vencimento</th>
+              <th class="pb-2 text-right">Valor</th>
+            </tr>
+          </thead>
+          <tbody id="lista-parcelas">
+            <!-- Gerado via JS -->
+            <tr>
+              <td colspan="3" class="pt-2 text-center text-slate-400">
+                Informe o valor total para calcular.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mt-6 flex justify-end">
+      <button
+        id="btnSalvarVenda"
+        onclick="salvarVenda()"
+        class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg transition-all"
+      >
+        Gravar Lançamento
+      </button>
+    </div>
+  </div>
+</section>

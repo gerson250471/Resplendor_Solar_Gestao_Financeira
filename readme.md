@@ -40,27 +40,27 @@ Tratamento de dízimas e arredondamentos matemáticos precisos na divisão de va
 
 O projeto foi construído utilizando uma arquitetura SPA (Single Page Application).
 
-Frontend:
+### Frontend:
 
-HTML5 & CSS3
+- HTML5 & CSS3
 
-Tailwind CSS (Estilização utilitária e design responsivo)
+- Tailwind CSS (Estilização utilitária e design responsivo)
 
-Vanilla JavaScript (ES6+)
+- Vanilla JavaScript (ES6+)
 
-Lucide Icons (Iconografia moderna)
+- Lucide Icons (Iconografia moderna)
 
-Backend e Base de Dados:
+### Backend e Base de Dados:
 
-Google Apps Script (V8): Motor de execução server-side.
+- Google Apps Script (V8): Motor de execução server-side.
 
-Google Sheets: Atuando como Base de Dados NoSQL, com separação lógica em abas (Clientes, Vendas, Parcelas).
+- Google Sheets: Atuando como Base de Dados NoSQL, com separação lógica em abas (Clientes, Vendas, Parcelas).
 
-Ambiente de Desenvolvimento:
+### Ambiente de Desenvolvimento:
 
-CLASP (Command Line Apps Script Projects)
+- CLASP (Command Line Apps Script Projects)
 
-Visual Studio Code
+- Visual Studio Code
 
 ## 🚀 Como Executar / Fazer o Deploy
 

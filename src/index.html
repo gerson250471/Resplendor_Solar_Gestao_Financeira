@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Resplendor Solar - Master</title>
+
+    <!-- LINKS CORRIGIDOS: Sem colchetes e parêntesis indevidos -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-
-    <!-- Ícones (Lucide) -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
@@ -36,7 +36,7 @@
         }
       }
 
-      /* Animações do Toast (Notificações) */
+      /* Animações do Toast */
       @keyframes slideInRight {
         from {
           transform: translateX(100%);
@@ -87,13 +87,13 @@
     </style>
   </head>
   <body class="flex h-screen overflow-hidden relative">
-    <!-- CONTÊINER DE TOASTS (Notificações) -->
+    <!-- CONTÊINER DE TOASTS -->
     <div
       id="toast-container"
       class="fixed top-4 right-4 z-50 flex flex-col gap-3"
     ></div>
 
-    <!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
+    <!-- MODAL DE EXCLUSÃO -->
     <div
       id="modal-exclusao"
       class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity"
@@ -147,8 +147,8 @@
           onclick="navegarPara('clientes')"
           class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-left text-sm font-medium"
         >
-          <i data-lucide="users" class="w-5 h-5 text-green-400"></i>
-          Gestão de Clientes
+          <i data-lucide="users" class="w-5 h-5 text-green-400"></i> Gestão de
+          Clientes
         </button>
         <button
           onclick="navegarPara('financeiro')"
@@ -164,312 +164,28 @@
       <div
         class="p-4 border-t border-slate-800 text-xs text-center text-slate-500"
       >
-        Versão 1.3.0
+        Versão 1.3.1 Modular
       </div>
     </aside>
 
-    <!-- ÁREA PRINCIPAL -->
+    <!-- ÁREA PRINCIPAL COM OS INCLUDES DO GOOGLE APPS SCRIPT -->
     <main class="flex-1 overflow-y-auto p-6 md:p-8">
-      <!-- TELA 1: DASHBOARD -->
-      <section id="view-dashboard" class="page-view active">
-        <h2 class="text-2xl font-bold text-slate-800 mb-6">Visão Geral</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div class="finance-card border-t-4 border-blue-500">
-            <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
-              Saldo Total
-            </h3>
-            <p class="text-3xl font-bold text-slate-800" id="dash-total">
-              R$ 0,00
-            </p>
-          </div>
-          <div class="finance-card border-t-4 border-green-500">
-            <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
-              Vendas no Mês
-            </h3>
-            <p class="text-3xl font-bold text-slate-800" id="dash-vendas">0</p>
-          </div>
-          <div class="finance-card border-t-4 border-red-500">
-            <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
-              Parcelas Vencidas
-            </h3>
-            <p class="text-3xl font-bold text-slate-800" id="dash-vencidas">
-              0
-            </p>
-          </div>
-        </div>
-        <button
-          onclick="carregarDashboard()"
-          class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
-        >
-          <i data-lucide="refresh-cw" class="w-4 h-4 inline-block mr-2"></i
-          >Atualizar Dados
-        </button>
-      </section>
+      <?!= include('dashboard'); ?> <?!= include('clientes'); ?>
 
-      <!-- TELA 2: GESTÃO DE CLIENTES -->
-      <section id="view-clientes" class="page-view">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold text-slate-800">Clientes</h2>
-        </div>
+      <!-- 
+        Aqui seria o include('financeiro'). Mas como você pode estar testando o master, 
+        certifique-se de que o campo "Cliente" no financeiro.html (ou aqui caso use tudo junto)
+        contenha a propriedade list="clientes-list" na tag <input> e adicione o <datalist> logo a seguir,
+        como no exemplo abaixo (já modificado se você estiver a usar o módulo aqui):
+      -->
+      <?!= include('financeiro'); ?>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Formulário -->
-          <div class="finance-card lg:col-span-1">
-            <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">
-              Detalhes do Cliente
-            </h3>
-            <div class="space-y-4">
-              <div>
-                <label
-                  class="block text-xs font-bold text-slate-500 uppercase mb-1"
-                  >ID (Automático ou CPF/CNPJ)</label
-                >
-                <input
-                  type="text"
-                  id="cli-id"
-                  class="input-field font-mono font-bold text-blue-600"
-                  placeholder="Ex: CLI-1"
-                />
-              </div>
-              <div>
-                <label
-                  class="block text-xs font-bold text-slate-500 uppercase mb-1"
-                  >Nome / Descrição</label
-                >
-                <input
-                  type="text"
-                  id="cli-nome"
-                  class="input-field"
-                  placeholder="Nome completo"
-                />
-              </div>
-              <div>
-                <label
-                  class="block text-xs font-bold text-slate-500 uppercase mb-1"
-                  >Celular</label
-                >
-                <input
-                  type="text"
-                  id="cli-celular"
-                  class="input-field"
-                  placeholder="(12) 99999-9999"
-                />
-              </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    class="block text-xs font-bold text-slate-500 uppercase mb-1"
-                    >Cidade</label
-                  >
-                  <input
-                    type="text"
-                    id="cli-cidade"
-                    class="input-field"
-                    value="Taubaté"
-                  />
-                </div>
-                <div>
-                  <label
-                    class="block text-xs font-bold text-slate-500 uppercase mb-1"
-                    >Bairro</label
-                  >
-                  <input type="text" id="cli-bairro" class="input-field" />
-                </div>
-              </div>
-              <div>
-                <label
-                  class="block text-xs font-bold text-slate-500 uppercase mb-1"
-                  >Endereço</label
-                >
-                <input type="text" id="cli-endereco" class="input-field" />
-              </div>
-              <div class="flex gap-2 mt-4">
-                <button
-                  id="btnCancelarCliente"
-                  onclick="limparFormularioCliente()"
-                  class="hidden w-1/3 bg-slate-200 text-slate-700 font-bold py-3 rounded-lg hover:bg-slate-300 transition-colors text-sm"
-                >
-                  Cancelar
-                </button>
-                <button
-                  id="btnSalvarCliente"
-                  onclick="salvarNovoCliente()"
-                  class="flex-1 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors text-sm"
-                >
-                  Salvar Cadastro
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Lista -->
-          <div class="finance-card lg:col-span-2">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-bold text-slate-800">Cadastrados</h3>
-              <button
-                onclick="carregarListaClientes()"
-                class="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
-                <i
-                  data-lucide="refresh-cw"
-                  class="w-4 h-4 inline-block mr-1"
-                ></i>
-                Atualizar Lista
-              </button>
-            </div>
-
-            <!-- CAMPO DE FILTRO -->
-            <div class="mb-4">
-              <input
-                type="text"
-                id="filtro-cli"
-                onkeyup="filtrarClientes()"
-                placeholder="Pesquisar por Nome, ID ou Cidade..."
-                class="input-field w-full"
-              />
-            </div>
-
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="bg-slate-50 border-y border-slate-200">
-                    <th class="p-3 text-xs font-bold text-slate-500 uppercase">
-                      ID
-                    </th>
-                    <th class="p-3 text-xs font-bold text-slate-500 uppercase">
-                      Nome
-                    </th>
-                    <th class="p-3 text-xs font-bold text-slate-500 uppercase">
-                      Cidade
-                    </th>
-                    <th
-                      class="p-3 text-xs font-bold text-slate-500 uppercase text-center"
-                    >
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody id="tabela-cli">
-                  <tr>
-                    <td
-                      colspan="4"
-                      class="p-4 text-center text-slate-400 text-sm"
-                    >
-                      Carregando dados...
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TELA 3: SISTEMA FINANCEIRO (LANÇAMENTO) -->
-      <section id="view-financeiro" class="page-view">
-        <h2 class="text-2xl font-bold text-slate-800 mb-6">
-          Novo Lançamento Financeiro
-        </h2>
-
-        <div class="finance-card max-w-3xl">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label
-                class="block text-xs font-bold text-slate-500 uppercase mb-1"
-                >ID da Venda</label
-              >
-              <input
-                type="text"
-                id="fin-idVenda"
-                class="input-field"
-                placeholder="Ex: VEN-001"
-              />
-            </div>
-            <div>
-              <label
-                class="block text-xs font-bold text-slate-500 uppercase mb-1"
-                >Cliente</label
-              >
-              <input
-                type="text"
-                id="fin-cliente"
-                class="input-field"
-                placeholder="Nome do Cliente"
-              />
-            </div>
-            <div>
-              <label
-                class="block text-xs font-bold text-slate-500 uppercase mb-1"
-                >Valor Total (R$)</label
-              >
-              <input
-                type="number"
-                id="fin-valor"
-                class="input-field"
-                placeholder="0.00"
-                onchange="gerarParcelas()"
-              />
-            </div>
-            <div>
-              <label
-                class="block text-xs font-bold text-slate-500 uppercase mb-1"
-                >Qtd. Parcelas</label
-              >
-              <select
-                id="fin-parcelas"
-                class="input-field"
-                onchange="gerarParcelas()"
-              >
-                <option value="1">À Vista (1x)</option>
-                <option value="2">2x</option>
-                <option value="3">3x</option>
-                <option value="6">6x</option>
-                <option value="12">12x</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="border-t pt-4">
-            <h3 class="text-sm font-bold text-slate-700 mb-3">
-              Previsão de Parcelas
-            </h3>
-            <div class="bg-slate-50 rounded border p-4">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="text-left text-slate-500 border-b">
-                    <th class="pb-2">Nº</th>
-                    <th class="pb-2">Vencimento</th>
-                    <th class="pb-2 text-right">Valor</th>
-                  </tr>
-                </thead>
-                <tbody id="lista-parcelas">
-                  <!-- Gerado via JS -->
-                  <tr>
-                    <td colspan="3" class="pt-2 text-center text-slate-400">
-                      Informe o valor total para calcular.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="mt-6 flex justify-end">
-            <button
-              id="btnSalvarVenda"
-              onclick="salvarVenda()"
-              class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg transition-all"
-            >
-              Gravar Lançamento
-            </button>
-          </div>
-        </div>
-      </section>
+      <!-- Datalist invisível usado para a sugestão de nomes no input de Vendas -->
+      <datalist id="clientes-list"></datalist>
     </main>
 
-    <!-- SCRIPTS DE CONTROLE (Client-side) -->
+    <!-- SCRIPTS DE CONTROLE (O "CÉREBRO" DO FRONT-END) -->
     <script>
-      // Inicializa os ícones
       lucide.createIcons();
 
       // --- SISTEMA DE NOTIFICAÇÃO TOAST ---
@@ -491,21 +207,19 @@
 
         toast.className = `toast-enter flex items-center p-4 w-72 md:w-80 rounded-lg shadow-xl text-white font-medium text-sm ${bgColor}`;
         toast.innerHTML = `${icone} <span>${mensagem}</span>`;
-
         container.appendChild(toast);
 
-        // Remove o toast suavemente após 3.5 segundos
         setTimeout(() => {
           toast.classList.replace("toast-enter", "toast-exit");
           setTimeout(() => {
             toast.remove();
-          }, 300); // Aguarda animação CSS terminar
+          }, 300);
         }, 3500);
       }
 
       // --- VARIÁVEIS GLOBAIS ---
       let listaCli = [];
-      let idClienteParaExcluir = null; // Variável para guardar qual ID será apagado no Modal
+      let idClienteParaExcluir = null;
 
       // --- NAVEGAÇÃO SPA ---
       function navegarPara(tela) {
@@ -516,12 +230,12 @@
 
         if (tela === "dashboard") carregarDashboard();
         if (tela === "clientes") carregarListaClientes();
+        if (tela === "financeiro") carregarProximoIdVenda();
       }
 
       // --- FUNÇÕES DO DASHBOARD ---
       function carregarDashboard() {
         document.getElementById("dash-total").innerText = "Carregando...";
-
         google.script.run
           .withSuccessHandler((res) => {
             if (res.sucesso) {
@@ -542,8 +256,6 @@
       }
 
       // --- FUNÇÕES DE CLIENTES ---
-
-      // NOVA FUNÇÃO: Gera o próximo ID baseado nos "CLI-" já existentes
       function gerarProximoId() {
         if (!listaCli || listaCli.length === 0) return "CLI-1";
         let maxNum = 0;
@@ -551,9 +263,7 @@
           const idStr = String(c.id).trim();
           if (idStr.startsWith("CLI-")) {
             const num = parseInt(idStr.replace("CLI-", ""), 10);
-            if (!isNaN(num) && num > maxNum) {
-              maxNum = num;
-            }
+            if (!isNaN(num) && num > maxNum) maxNum = num;
           }
         });
         return `CLI-${maxNum + 1}`;
@@ -564,10 +274,7 @@
           .querySelectorAll("#view-clientes input")
           .forEach((i) => (i.value = ""));
         document.getElementById("cli-cidade").value = "Taubaté";
-
-        // Auto-preenche com o novo ID formatado
         document.getElementById("cli-id").value = gerarProximoId();
-
         document.getElementById("cli-id").removeAttribute("readonly");
         document
           .getElementById("cli-id")
@@ -584,7 +291,6 @@
 
       function salvarNovoCliente() {
         const btn = document.getElementById("btnSalvarCliente");
-
         const nomeDigitado = String(
           document.getElementById("cli-nome").value,
         ).trim();
@@ -598,21 +304,16 @@
           return;
         }
 
-        // --- LÓGICA DE VERIFICAÇÃO NOME + CELULAR ---
-        // Verifica se o formulário não está bloqueado em modo de edição e o celular não está vazio
         const isEditando = document
           .getElementById("cli-id")
           .hasAttribute("readonly");
         if (!isEditando && celularDigitado !== "") {
-          // Busca um cliente com o mesmo nome e celular
           const clienteExistente = listaCli.find(
             (c) =>
               c.descricao.toLowerCase() === nomeDigitado.toLowerCase() &&
               c.celular === celularDigitado,
           );
-
           if (clienteExistente) {
-            // Se encontrou, em vez de criar um ID novo, assumimos o ID antigo para acionar a Atualização (Upsert)
             idDigitado = clienteExistente.id;
             mostrarToast("Cliente encontrado! Atualizando cadastro...", "info");
           }
@@ -641,24 +342,38 @@
           .salvarCliente(dados);
       }
 
+      // NOVA FUNÇÃO: Atualiza a lista de opções nativas (Autocomplete)
+      function atualizarDataListClientes(lista) {
+        const datalist = document.getElementById("clientes-list");
+        if (datalist) {
+          datalist.innerHTML = lista
+            .map((c) => `<option value="${c.descricao}">`)
+            .join("");
+        }
+      }
+
       function carregarListaClientes() {
         const tbody = document.getElementById("tabela-cli");
-        tbody.innerHTML =
-          '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-sm">Atualizando banco de dados...</td></tr>';
+        if (tbody)
+          tbody.innerHTML =
+            '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-sm">Atualizando base de dados...</td></tr>';
 
         google.script.run
           .withSuccessHandler((res) => {
             if (res.sucesso && res.dados.length > 0) {
               listaCli = res.dados;
-              renderizarTabelaClientes(listaCli);
+              if (tbody) renderizarTabelaClientes(listaCli);
+              atualizarDataListClientes(listaCli); // Alimenta o Autocomplete de Lançamentos
             } else {
               listaCli = [];
-              tbody.innerHTML =
-                '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-sm">Nenhum cliente encontrado.</td></tr>';
+              if (tbody)
+                tbody.innerHTML =
+                  '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-sm">Nenhum cliente encontrado.</td></tr>';
             }
-
-            // Auto-preenche o ID caso o usuário não esteja editando um cliente
-            if (!document.getElementById("cli-id").hasAttribute("readonly")) {
+            if (
+              document.getElementById("cli-id") &&
+              !document.getElementById("cli-id").hasAttribute("readonly")
+            ) {
               document.getElementById("cli-id").value = gerarProximoId();
             }
           })
@@ -667,6 +382,8 @@
 
       function renderizarTabelaClientes(lista) {
         const corpo = document.getElementById("tabela-cli");
+        if (!corpo) return;
+
         if (lista.length === 0) {
           corpo.innerHTML =
             '<tr><td colspan="4" class="p-10 text-center text-slate-400">Nenhum cliente encontrado na pesquisa.</td></tr>';
@@ -736,12 +453,10 @@
         }
       }
 
-      // --- FUNÇÕES DO MODAL DE EXCLUSÃO ---
       function abrirModalExclusao(id, nome) {
         idClienteParaExcluir = id;
         document.getElementById("msg-exclusao-modal").innerHTML =
           `Deseja realmente remover o cliente <b>${nome}</b>?`;
-
         const modal = document.getElementById("modal-exclusao");
         modal.classList.remove("hidden");
         modal.classList.add("flex");
@@ -756,11 +471,9 @@
 
       function confirmarExclusao() {
         if (!idClienteParaExcluir) return;
-
-        const idSalvo = idClienteParaExcluir; // Salva o ID antes de fechar o modal
-        fecharModalExclusao(); // Esconde o modal imediatamente (e anula a variável global)
-
-        mostrarToast("Processando exclusão...", "info"); // Usamos "info" para aparecer azulzinho
+        const idSalvo = idClienteParaExcluir;
+        fecharModalExclusao();
+        mostrarToast("A processar exclusão...", "info");
 
         google.script.run
           .withSuccessHandler((res) => {
@@ -774,11 +487,50 @@
           .withFailureHandler((err) => {
             mostrarToast("Erro técnico: " + (err.message || err), "erro");
           })
-          .eliminarCliente(idSalvo); // Passamos a nossa cópia segura!
+          .eliminarCliente(idSalvo);
       }
 
       // --- FUNÇÕES FINANCEIRO ---
       let parcelasAtuais = [];
+
+      function carregarProximoIdVenda() {
+        const inputId = document.getElementById("fin-idVenda");
+        inputId.value = "A gerar...";
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res.sucesso) {
+              inputId.value = res.id;
+            } else {
+              mostrarToast("Erro ao gerar ID: " + res.mensagem, "erro");
+              inputId.removeAttribute("readonly");
+              inputId.classList.remove("bg-slate-100");
+              inputId.value = "";
+            }
+          })
+          .obterProximoIdVenda();
+      }
+
+      function verificarMetodoPagamento() {
+        const selectMetodo = document.getElementById("fin-metodo");
+        const selectParcelas = document.getElementById("fin-parcelas");
+
+        if (!selectMetodo || !selectParcelas) return;
+
+        const metodo = selectMetodo.value;
+        const metodosAVista = [
+          "BOLETO À VISTA",
+          "CARTÃO À VISTA",
+          "ESPECIE / PIX",
+        ];
+
+        if (metodosAVista.includes(metodo)) {
+          selectParcelas.value = "1";
+          selectParcelas.disabled = true;
+          gerarParcelas();
+        } else {
+          selectParcelas.disabled = false;
+        }
+      }
 
       function gerarParcelas() {
         const valorTotal = parseFloat(
@@ -795,14 +547,12 @@
 
         const valorBase = Math.floor((valorTotal / qtd) * 100) / 100;
         const resto = parseFloat((valorTotal - valorBase * qtd).toFixed(2));
-
         parcelasAtuais = [];
         let html = "";
         const hoje = new Date();
 
         for (let i = 1; i <= qtd; i++) {
           let valorParcela = i === 1 ? valorBase + resto : valorBase;
-
           let vencimento = new Date(hoje);
           vencimento.setMonth(vencimento.getMonth() + i);
           let dataStr = vencimento.toISOString().split("T")[0];
@@ -826,38 +576,77 @@
       }
 
       function salvarVenda() {
-        const venda = {
-          idVenda: String(document.getElementById("fin-idVenda").value).trim(),
-          cliente: String(document.getElementById("fin-cliente").value).trim(),
-          valorTotal: parseFloat(document.getElementById("fin-valor").value),
-          formaPagamento: document.getElementById("fin-parcelas").value + "x",
-          saldoDevedor: parseFloat(document.getElementById("fin-valor").value),
-          status: "EM ABERTO",
-        };
+        const selectParcelas = document.getElementById("fin-parcelas");
+        const textoParcelas =
+          selectParcelas.options[selectParcelas.selectedIndex].text;
+        const metodoPagamento = document.getElementById("fin-metodo").value;
+
+        const nomeClienteDigitado = String(
+          document.getElementById("fin-cliente").value,
+        ).trim();
+        const idVenda = String(
+          document.getElementById("fin-idVenda").value,
+        ).trim();
+        const valorTotal = parseFloat(
+          document.getElementById("fin-valor").value,
+        );
 
         if (
-          !venda.idVenda ||
-          !venda.cliente ||
-          !venda.valorTotal ||
+          !idVenda ||
+          !nomeClienteDigitado ||
+          !valorTotal ||
           parcelasAtuais.length === 0
         ) {
           mostrarToast("Preencha ID, Cliente e Valor corretamente.", "erro");
           return;
         }
 
+        // --- VALIDAÇÃO SE CLIENTE EXISTE ---
+        const clienteValido = listaCli.find(
+          (c) =>
+            c.descricao.toLowerCase() === nomeClienteDigitado.toLowerCase(),
+        );
+
+        if (!clienteValido) {
+          mostrarToast(
+            "Cliente não encontrado! Por favor, cadastre o cliente em 'Gestão de Clientes' antes de prosseguir.",
+            "erro",
+          );
+          // Opcional: Se quiser redirecionar automaticamente para a tela de clientes:
+          // navegarPara('clientes');
+          // document.getElementById('cli-nome').value = nomeClienteDigitado;
+          return; // Para a execução e não grava
+        }
+
+        const venda = {
+          idVenda: idVenda,
+          cliente: clienteValido.descricao, // Usa o nome exato conforme está na base de dados
+          valorTotal: valorTotal,
+          formaPagamento: `${metodoPagamento} (${textoParcelas})`,
+          saldoDevedor: valorTotal,
+          status: "EM ABERTO",
+        };
+
         const btn = document.getElementById("btnSalvarVenda");
         btn.disabled = true;
-        btn.innerText = "Processando...";
+        btn.innerText = "A processar...";
 
         google.script.run
           .withSuccessHandler((res) => {
             mostrarToast(res.mensagem, "sucesso");
             btn.disabled = false;
             btn.innerText = "Gravar Lançamento";
+
+            // Limpeza de formulário
             document
               .querySelectorAll("#view-financeiro input")
               .forEach((i) => (i.value = ""));
+            document.getElementById("fin-metodo").selectedIndex = 0;
+            document.getElementById("fin-parcelas").selectedIndex = 0;
+            document.getElementById("fin-parcelas").disabled = false;
             document.getElementById("lista-parcelas").innerHTML = "";
+
+            carregarProximoIdVenda();
           })
           .withFailureHandler((err) => {
             mostrarToast("Erro técnico: " + err, "erro");
@@ -867,8 +656,19 @@
           .processarGravacao(venda, parcelasAtuais);
       }
 
-      // Inicializa Dashboard ao abrir
-      window.onload = () => carregarDashboard();
+      // Inicializa Dashboard e configura os eventos ao carregar a página
+      window.onload = () => {
+        carregarDashboard();
+
+        // Dispara a carga de clientes silenciosamente para preparar as validações e o Autocomplete
+        carregarListaClientes();
+
+        // Adiciona o monitoramento automático ao campo de Forma de Pagamento
+        const selectMetodo = document.getElementById("fin-metodo");
+        if (selectMetodo) {
+          selectMetodo.addEventListener("change", verificarMetodoPagamento);
+        }
+      };
     </script>
   </body>
 </html>

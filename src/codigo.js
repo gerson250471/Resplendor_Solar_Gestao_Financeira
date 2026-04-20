@@ -2,31 +2,22 @@
  * SISTEMA FINANCEIRO E CRM - RESPLENDOR SOLAR
  * Desenvolvido por: MAJB SISTEMAS
  * Local: Taubaté/SP
- * Arquivo: codigo.js (Backend executado nos servidores do Google)
  */
 
 const SPREADSHEET_ID = "1GY1tukFd1mOwhbwyZTvEXApHdktL5SuzaOKsqHHEEr8";
 
-/**
- * PONTO DE ENTRADA WEB APP
- * Serve o arquivo index.html consolidado.
- * * Correção do Erro de Referência: Separamos a criação do template 
- * da aplicação de títulos e meta tags para garantir a compatibilidade
- * com o compilador V8 do Apps Script via CLASP.
- */
 function doGet(e) {
-  // 1. Cria o template a partir do ficheiro HTML
   const template = HtmlService.createTemplateFromFile('index');
-  
-  // 2. Avalia o template gerando um objeto HtmlOutput
   const output = template.evaluate();
-  
-  // 3. Aplica as configurações ao objeto HtmlOutput
   output.setTitle('Resplendor Solar - Gestão Centralizada');
   output.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   output.addMetaTag('viewport', 'width=device-width, initial-scale=1');
-  
   return output;
+}
+
+// 🚀 NOVA FUNÇÃO DE MODULARIZAÇÃO
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
 /**
@@ -115,46 +106,17 @@ function salvarCliente(dados) {
       aba.appendRow(["ID", "Descrição", "Endereço", "Bairro", "Cidade", "Celular"]);
     }
 
-    // O SEGREDO ESTÁ AQUI: getDisplayValues() puxa tudo como string (texto puro),
-    // igualzinho ao que está visível na célula, evitando erros de formatação de CPF/Número
-    const valores = aba.getDataRange().getDisplayValues();
-    let linhaExistente = -1;
+    // Usando appendRow (Inserção rápida)
+    aba.appendRow([
+      dados.id, 
+      dados.descricao, 
+      dados.endereco, 
+      dados.bairro, 
+      dados.cidade, 
+      dados.celular
+    ]);
     
-    // Garante que a busca é feita sem espaços nas pontas
-    const idBusca = String(dados.id).trim();
-
-    for (let i = 1; i < valores.length; i++) {
-      if (String(valores[i][0]).trim() === idBusca) {
-        linhaExistente = i + 1; // +1 porque array em JS começa no 0 e a planilha começa na linha 1
-        break;
-      }
-    }
-
-    if (linhaExistente > -1) {
-      // 🔄 ATUALIZAÇÃO DE REGISTRO EXISTENTE
-      aba.getRange(linhaExistente, 1, 1, 6).setValues([[
-        idBusca, 
-        dados.descricao, 
-        dados.endereco, 
-        dados.bairro, 
-        dados.cidade, 
-        dados.celular
-      ]]);
-      return { sucesso: true, mensagem: "Cadastro atualizado com sucesso!" };
-      
-    } else {
-      // ➕ INSERÇÃO DE NOVO REGISTRO
-      aba.appendRow([
-        idBusca, 
-        dados.descricao, 
-        dados.endereco, 
-        dados.bairro, 
-        dados.cidade, 
-        dados.celular
-      ]);
-      return { sucesso: true, mensagem: "Novo cliente salvo com sucesso!" };
-    }
-    
+    return { sucesso: true, mensagem: "Cliente salvo com sucesso!" };
   } catch (e) { 
     return { sucesso: false, mensagem: e.message }; 
   }
@@ -207,22 +169,75 @@ function eliminarCliente(id) {
 /**
  * --- LANÇAMENTO DE VENDAS ---
  */
+function obterProximoIdVenda() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const abaVendas = ss.getSheetByName("Vendas");
+    const anoAtual = new Date().getFullYear();
+
+    // Se a aba Vendas não existir, retornamos a venda nº 1
+    if (!abaVendas) return { sucesso: true, id: `VEN-${anoAtual}-001` };
+
+    const dv = abaVendas.getDataRange().getValues();
+    let contagemAno = 0;
+
+    // Loop para encontrar todas as vendas do ano atual
+    for (let i = 1; i < dv.length; i++) {
+      const dataVenda = new Date(dv[i][2]); // Índice 2 é a Data da Venda
+      if (dataVenda instanceof Date && !isNaN(dataVenda.getTime())) {
+        if (dataVenda.getFullYear() === anoAtual) {
+          contagemAno++;
+        }
+      }
+    }
+
+    // Calcula o próximo número e formata com 3 zeros (ex: 001, 015, 102)
+    const proximoNumero = contagemAno + 1;
+    const numeroFormatado = proximoNumero.toString().padStart(3, '0');
+    
+    return { sucesso: true, id: `VEN-${anoAtual}-${numeroFormatado}` };
+  } catch (e) {
+    return { sucesso: false, mensagem: e.message };
+  }
+}
+
+/**
+ * --- LANÇAMENTO DE VENDAS ---
+ */
 function processarGravacao(venda, parcelas) {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     let abaVendas = ss.getSheetByName("Vendas");
+    
+    // Se a aba Vendas não existir, cria com os cabeçalhos EXATOS informados
     if (!abaVendas) {
         abaVendas = ss.insertSheet("Vendas");
-        abaVendas.appendRow(["ID Venda", "Cliente", "Data", "Valor Total", "Forma Pgto", "Saldo Devedor", "Status"]);
+        abaVendas.appendRow([
+          "ID Venda", 
+          "CLIENTES DEVEDORES", 
+          "Data venda", 
+          "Valor Total", 
+          "Forma Pagamento", 
+          "Saldo Devedor", 
+          "Status"
+        ]);
     }
     
     let abaParcelas = ss.getSheetByName("Parcelas");
+    
+    // Se a aba Parcelas não existir, cria com os cabeçalhos EXATOS informados
     if (!abaParcelas) {
         abaParcelas = ss.insertSheet("Parcelas");
-        abaParcelas.appendRow(["ID Venda", "Nº Parcela", "Vencimento", "Valor", "Status"]);
+        abaParcelas.appendRow([
+          "ID Venda", 
+          "Número", 
+          "Vencimento", 
+          "Valor", 
+          "Status"
+        ]);
     }
 
-    // Grava a Venda
+    // Grava a Venda (A ordem do array bate exatamente com as colunas)
     abaVendas.appendRow([
       venda.idVenda, 
       venda.cliente, 
@@ -233,7 +248,7 @@ function processarGravacao(venda, parcelas) {
       venda.status
     ]);
 
-    // Grava as Parcelas em lote (Muito mais rápido que appendRow dentro de loop)
+    // Grava as Parcelas em lote (Muito mais rápido)
     if (parcelas && parcelas.length > 0) {
       const dadosParcelas = parcelas.map(p => [
         venda.idVenda,
@@ -247,7 +262,7 @@ function processarGravacao(venda, parcelas) {
       abaParcelas.getRange(ultimaLinha, 1, dadosParcelas.length, 5).setValues(dadosParcelas);
     }
 
-    return { sucesso: true, mensagem: "Venda e parcelas registadas com sucesso!" };
+    return { sucesso: true, mensagem: "Venda e parcelas registradas com sucesso!" };
   } catch (e) {
     return { sucesso: false, mensagem: e.message };
   }
