@@ -1,30 +1,55 @@
 <section id="view-dashboard" class="page-view active">
   <h2 class="text-2xl font-bold text-slate-800 mb-6">Visão Geral</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
     <div class="finance-card border-t-4 border-blue-500">
       <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
-        Saldo Total
+        Saldo Total a Receber
       </h3>
       <p class="text-3xl font-bold text-slate-800" id="dash-total">R$ 0,00</p>
     </div>
-    <div class="finance-card border-t-4 border-green-500">
+    <div class="finance-card border-t-4 border-slate-400">
       <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
-        Vendas no Mês
+        Vendas (Mês Atual)
       </h3>
       <p class="text-3xl font-bold text-slate-800" id="dash-vendas">0</p>
     </div>
-    <div class="finance-card border-t-4 border-red-500">
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div
+      onclick="abrirFiltroStatus('EM ABERTO')"
+      class="finance-card border-t-4 border-emerald-500 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+    >
       <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
-        Parcelas Vencidas
+        Parcelas em Aberto
       </h3>
-      <p class="text-3xl font-bold text-slate-800" id="dash-vencidas">0</p>
+      <p class="text-3xl font-bold text-emerald-600" id="dash-aberto">0</p>
+    </div>
+    <div
+      onclick="abrirFiltroStatus('URGENTE')"
+      class="finance-card border-t-4 border-amber-500 bg-amber-50/30 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+    >
+      <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
+        Vencimento Próximo (Urgente)
+      </h3>
+      <p class="text-3xl font-bold text-amber-600" id="dash-urgente">0</p>
+    </div>
+    <div
+      onclick="abrirFiltroStatus('EM ATRASO')"
+      class="finance-card border-t-4 border-red-500 bg-red-50/30 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+    >
+      <h3 class="text-sm font-bold text-slate-500 uppercase mb-1">
+        Parcelas em Atraso
+      </h3>
+      <p class="text-3xl font-bold text-red-600" id="dash-atraso">0</p>
     </div>
   </div>
+
   <button
     onclick="carregarDashboard()"
-    class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+    class="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-all text-sm font-bold"
   >
-    <i data-lucide="refresh-cw" class="w-4 h-4 inline-block mr-2"></i>Atualizar
-    Dados
+    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Atualizar Painel
   </button>
 </section>

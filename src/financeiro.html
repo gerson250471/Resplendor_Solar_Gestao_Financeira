@@ -22,7 +22,6 @@
         <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
           >Cliente</label
         >
-        <!-- Com este bloqueio, nenhuma venda passará sem ter o cliente perfeitamente sincronizado com o CRM! Se tudo correr bem, pode avançar para o *commit*. -->
         <input
           type="text"
           id="fin-cliente"
@@ -31,45 +30,59 @@
           placeholder="Nome do Cliente (Selecione)"
         />
       </div>
-
-      <div class="md:col-span-4">
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div>
         <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
           >Valor Total (R$)</label
         >
         <input
           type="number"
           id="fin-valor"
-          class="input-field"
-          placeholder="0.00"
+          step="0.01"
+          onkeyup="gerarParcelas()"
           onchange="gerarParcelas()"
+          class="input-field font-mono font-bold text-slate-800"
+          placeholder="0.00"
         />
       </div>
-
-      <div class="md:col-span-4">
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
+          >1º Vencimento</label
+        >
+        <input
+          type="date"
+          id="fin-data-primeiro-venc"
+          onchange="gerarParcelas()"
+          class="input-field text-slate-700 font-medium"
+        />
+      </div>
+      <div>
         <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
           >Forma de Pagamento</label
         >
-        <select id="fin-metodo" class="input-field">
+        <select
+          id="fin-metodo"
+          class="input-field"
+          onchange="verificarMetodoPagamento()"
+        >
+          <option value="BOLETO BANCÁRIO">BOLETO BANCÁRIO</option>
+          <option value="CARTÃO DE CRÉDITO">CARTÃO DE CRÉDITO</option>
           <option value="BOLETO À VISTA">BOLETO À VISTA</option>
-          <option value="BOLETO PARCELADO">BOLETO PARCELADO</option>
           <option value="CARTÃO À VISTA">CARTÃO À VISTA</option>
-          <option value="CARTÃO PARCELADO">CARTÃO PARCELADO</option>
-          <option value="CHEQUE">CHEQUE</option>
-          <option value="CREDIÁRIO">CREDIÁRIO</option>
           <option value="ESPECIE / PIX">ESPECIE / PIX</option>
         </select>
       </div>
-
-      <div class="md:col-span-4">
+      <div>
         <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
-          >Nº Parcelas</label
+          >Qtd. Parcelas</label
         >
         <select
           id="fin-parcelas"
           class="input-field"
           onchange="gerarParcelas()"
         >
-          <option value="1">1x À VISTA</option>
+          <option value="1">1x (À Vista/Única)</option>
           <option value="2">2x SEM JUROS</option>
           <option value="3">3x SEM JUROS</option>
           <option value="4">4x SEM JUROS</option>
@@ -81,6 +94,12 @@
           <option value="10">10x SEM JUROS</option>
           <option value="11">11x SEM JUROS</option>
           <option value="12">12x SEM JUROS</option>
+          <option value="13">13x SEM JUROS</option>
+          <option value="14">14x SEM JUROS</option>
+          <option value="15">15x SEM JUROS</option>
+          <option value="16">16x SEM JUROS</option>
+          <option value="17">17x SEM JUROS</option>
+          <option value="18">18x SEM JUROS</option>
         </select>
       </div>
     </div>
@@ -99,7 +118,6 @@
             </tr>
           </thead>
           <tbody id="lista-parcelas">
-            <!-- Gerado via JS -->
             <tr>
               <td colspan="3" class="pt-2 text-center text-slate-400">
                 Informe o valor total para calcular.

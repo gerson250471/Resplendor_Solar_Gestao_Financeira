@@ -25,32 +25,30 @@ function include(filename) {
  */
 function getResumoFinanceiro() {
   try {
+    // 🚀 Atualiza os status antes de contar
+    atualizarStatusParcelas(); 
+    
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const abaVendas = ss.getSheetByName("Vendas");
     const abaParcelas = ss.getSheetByName("Parcelas");
     const hoje = new Date();
-    let total = 0, vendasMes = 0, vencidas = 0;
+    
+    let total = 0, vendasMes = 0;
+    let qtdAberto = 0, qtdUrgente = 0, qtdAtraso = 0;
 
     if (abaVendas) {
       const dv = abaVendas.getDataRange().getValues();
       for (let i = 1; i < dv.length; i++) {
-        // 1. Trata o Saldo Devedor (Índice 5)
-        let valorCru = dv[i][5];
+        let valorCru = dv[i][5]; // Saldo Devedor
         let saldo = 0;
-
         if (typeof valorCru === 'number') {
           saldo = valorCru;
         } else if (valorCru) {
-          // Remove pontos de milhar, troca vírgula por ponto e remove letras/símbolos
           saldo = parseFloat(String(valorCru).replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''));
         }
-
-        // Garante que não adicionaremos 'NaN' (Not a Number) caso o campo estivesse vazio
         total += isNaN(saldo) ? 0 : saldo;
 
-        // 2. Calcula as Vendas do Mês atual (Índice 2 é a Data)
         let dataVenda = new Date(dv[i][2]);
-        // Adicionada verificação rigorosa para garantir que a data é válida (.getTime())
         if (dataVenda instanceof Date && !isNaN(dataVenda.getTime())) {
           if (dataVenda.getMonth() === hoje.getMonth() && dataVenda.getFullYear() === hoje.getFullYear()) {
             vendasMes++;
@@ -62,30 +60,27 @@ function getResumoFinanceiro() {
     if (abaParcelas) {
       const dp = abaParcelas.getDataRange().getValues();
       for (let i = 1; i < dp.length; i++) {
-        const dataVenc = new Date(dp[i][2]); // Assume coluna 2 como Vencimento
-        const status = dp[i][4]; // Assume coluna 4 como Status
-
-        if (dataVenc instanceof Date && !isNaN(dataVenc.getTime())) {
-          if (dataVenc < hoje && status !== "PAGO") {
-            vencidas++;
-          }
-        }
+        const status = dp[i][4];
+        if (status === "EM ABERTO") qtdAberto++;
+        if (status === "URGENTE") qtdUrgente++;
+        if (status === "EM ATRASO") qtdAtraso++;
       }
     }
 
-    // 3. Formata o Total para o Padrão Brasileiro (ex: 1.500,00)
     const totalFormatado = new Intl.NumberFormat('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(total);
 
-    return {
-      sucesso: true,
-      dados: {
-        total: totalFormatado,
-        vendasMes: vendasMes,
-        vencidas: vencidas
-      }
+    return { 
+      sucesso: true, 
+      dados: { 
+        total: totalFormatado, 
+        vendasMes: vendasMes, 
+        aberto: qtdAberto,
+        urgente: qtdUrgente,
+        atraso: qtdAtraso 
+      } 
     };
   } catch (e) {
     return { sucesso: false, mensagem: e.message };
@@ -360,5 +355,71 @@ function confirmarPagamentoParcela(idVenda, numeroParcela) {
     return { sucesso: true, mensagem: "Pagamento confirmado com sucesso!" };
   } catch (e) {
     return { sucesso: false, mensagem: e.message };
+  }
+}
+
+/**
+ * --- ATUALIZAÇÃO AUTOMÁTICA DE STATUS DAS PARCELAS ---
+ */
+function atualizarStatusParcelas() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const abaParcelas = ss.getSheetByName("Parcelas");
+    
+    if (!abaParcelas) return false;
+    
+    const dados = abaParcelas.getDataRange().getValues();
+    
+    // Configurar a data de "Hoje" para meia-noite (para comparar apenas os dias, ignorando as horas)
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    let alteracoes = 0;
+    
+    // Criamos um array para armazenar a coluna de Status inteira
+    const colunaStatus = [];
+    colunaStatus.push([dados[0][4]]); // Mantém o cabeçalho "Status" intacto
+    
+    for (let i = 1; i < dados.length; i++) {
+      let statusAtual = dados[i][4];
+      let dataVenc = new Date(dados[i][2]);
+      let novoStatus = statusAtual;
+      
+      // Regra 1: Se já estiver PAGO, o sistema não mexe!
+      if (statusAtual !== "PAGO") {
+        if (dataVenc instanceof Date && !isNaN(dataVenc.getTime())) {
+          dataVenc.setHours(0, 0, 0, 0); // Zera as horas para cálculo perfeito
+          
+          // Cálculo de diferença de dias (Matemática de Datas em JS)
+          const diffTempo = dataVenc.getTime() - hoje.getTime();
+          const diffDias = Math.ceil(diffTempo / (1000 * 3600 * 24)); // Converte milissegundos para dias
+          
+          // Aplicando a sua regra de negócio:
+          if (diffDias < 0) {
+            novoStatus = "Em Atraso";
+          } else if (diffDias <= 10) {
+            novoStatus = "URGENTE";
+          } else {
+            novoStatus = "EM ABERTO";
+          }
+          
+          // Verifica se houve mudança para contabilizar
+          if (novoStatus !== statusAtual) alteracoes++;
+        }
+      }
+      
+      // Adiciona o status (novo ou antigo) na lista
+      colunaStatus.push([novoStatus]);
+    }
+    
+    // Regra de Ouro da Performance: Só escreve na planilha se houver mudanças
+    if (alteracoes > 0) {
+      abaParcelas.getRange(1, 5, colunaStatus.length, 1).setValues(colunaStatus);
+    }
+    
+    return true;
+  } catch (e) {
+    console.error("Erro ao atualizar status: " + e.message);
+    return false;
   }
 }

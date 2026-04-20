@@ -1,6 +1,11 @@
 <section id="view-pagamentos" class="page-view">
   <div class="flex justify-between items-center mb-6">
-    <h2 class="text-2xl font-bold text-slate-800">Confirmação de Pagamentos</h2>
+    <div class="flex items-center gap-3">
+      <h2 class="text-2xl font-bold text-slate-800">
+        Confirmação de Pagamentos
+      </h2>
+      <div id="badge-filtro" class="hidden"></div>
+    </div>
     <button
       onclick="carregarParcelasPendentes()"
       class="text-blue-600 hover:text-blue-800 text-sm font-medium"

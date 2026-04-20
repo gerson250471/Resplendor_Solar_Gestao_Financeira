@@ -172,10 +172,8 @@
     </aside>
 
     <main class="flex-1 overflow-y-auto p-6 md:p-8">
-      <?!= include('dashboard'); ?> 
-      <?!= include('clientes'); ?>
-      <?!= include('financeiro'); ?> 
-      <?!= include('pagamentos'); ?>
+      <?!= include('dashboard'); ?> <?!= include('clientes'); ?> <?!=
+      include('financeiro'); ?> <?!= include('pagamentos'); ?>
 
       <datalist id="clientes-list"></datalist>
     </main>
@@ -215,7 +213,8 @@
       // --- VARIÁVEIS GLOBAIS ---
       let listaCli = [];
       let idClienteParaExcluir = null;
-      let listaPagamentos = []; // Adicionado aqui para centralizar as variáveis
+      let listaPagamentos = [];
+      let statusFiltroAtivo = ""; // Variável nova para controlar o filtro do Dashboard
 
       // --- NAVEGAÇÃO SPA ---
       function navegarPara(tela) {
@@ -227,21 +226,38 @@
         if (tela === "dashboard") carregarDashboard();
         if (tela === "clientes") carregarListaClientes();
         if (tela === "financeiro") carregarProximoIdVenda();
-        if (tela === "pagamentos") carregarParcelasPendentes(); 
+        if (tela === "pagamentos") carregarParcelasPendentes();
       }
 
       // --- FUNÇÕES DO DASHBOARD ---
       function carregarDashboard() {
-        document.getElementById("dash-total").innerText = "Carregando...";
+        const ids = [
+          "dash-total",
+          "dash-vendas",
+          "dash-aberto",
+          "dash-urgente",
+          "dash-atraso",
+        ];
+        ids.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.innerText = "...";
+        });
+
         google.script.run
           .withSuccessHandler((res) => {
             if (res.sucesso) {
-              document.getElementById("dash-total").innerText =
-                `R$ ${res.dados.total}`;
-              document.getElementById("dash-vendas").innerText =
-                res.dados.vendasMes;
-              document.getElementById("dash-vencidas").innerText =
-                res.dados.vencidas;
+              const atualizarSeExistir = (id, valor) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = valor;
+              };
+
+              atualizarSeExistir("dash-total", `R$ ${res.dados.total}`);
+              atualizarSeExistir("dash-vendas", res.dados.vendasMes);
+              atualizarSeExistir("dash-aberto", res.dados.aberto);
+              atualizarSeExistir("dash-urgente", res.dados.urgente);
+              atualizarSeExistir("dash-atraso", res.dados.atraso);
+
+              lucide.createIcons();
             } else {
               mostrarToast(
                 "Erro ao carregar Dashboard: " + res.mensagem,
@@ -250,6 +266,40 @@
             }
           })
           .getResumoFinanceiro();
+      }
+
+      // --- INTEGRAÇÃO DASHBOARD -> PAGAMENTOS ---
+      function abrirFiltroStatus(status) {
+        statusFiltroAtivo = status;
+        const campoBusca = document.getElementById("filtro-pagamentos");
+        if (campoBusca) campoBusca.value = ""; // Limpa a busca digitada
+        navegarPara("pagamentos");
+      }
+
+      function limparFiltroStatus() {
+        statusFiltroAtivo = "";
+        aplicarFiltrosPagamentos();
+      }
+
+      function atualizarBadgeFiltro() {
+        const badge = document.getElementById("badge-filtro");
+        if (!badge) return;
+
+        if (statusFiltroAtivo) {
+          let cor =
+            statusFiltroAtivo === "EM ATRASO"
+              ? "bg-red-100 text-red-700 border-red-200"
+              : statusFiltroAtivo === "URGENTE"
+                ? "bg-amber-100 text-amber-700 border-amber-200"
+                : "bg-emerald-100 text-emerald-700 border-emerald-200";
+
+          badge.innerHTML = `<span class="px-3 py-1 text-xs font-bold rounded-full border ${cor}">Filtrando: ${statusFiltroAtivo}</span>
+                             <button onclick="limparFiltroStatus()" class="text-xs text-slate-500 hover:text-red-600 underline ml-2 transition-colors">Remover Filtro</button>`;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+          badge.innerHTML = "";
+        }
       }
 
       // --- FUNÇÕES DE CLIENTES ---
@@ -533,6 +583,7 @@
           document.getElementById("fin-valor").value,
         );
         const qtd = parseInt(document.getElementById("fin-parcelas").value);
+        const inputDataVenc = document.getElementById("fin-data-primeiro-venc");
         const tbody = document.getElementById("lista-parcelas");
 
         if (!valorTotal || valorTotal <= 0) {
@@ -545,12 +596,22 @@
         const resto = parseFloat((valorTotal - valorBase * qtd).toFixed(2));
         parcelasAtuais = [];
         let html = "";
-        const hoje = new Date();
+
+        // 🚀 NOVIDADE: Lógica do 1º Vencimento
+        let dataBase = new Date(); // Padrão é hoje
+        if (inputDataVenc && inputDataVenc.value) {
+          const partes = inputDataVenc.value.split("-");
+          // Instanciar assim: new Date(Ano, Mês - 1, Dia) evita bugs de fuso horário
+          dataBase = new Date(partes[0], partes[1] - 1, partes[2]);
+        }
 
         for (let i = 1; i <= qtd; i++) {
           let valorParcela = i === 1 ? valorBase + resto : valorBase;
-          let vencimento = new Date(hoje);
-          vencimento.setMonth(vencimento.getMonth() + i);
+
+          let vencimento = new Date(dataBase);
+          // Adiciona 1 mês para cada parcela, começando da data informada pelo cliente!
+          vencimento.setMonth(vencimento.getMonth() + (i - 1));
+
           let dataStr = vencimento.toISOString().split("T")[0];
 
           parcelasAtuais.push({
@@ -607,7 +668,7 @@
             "Cliente não encontrado! Por favor, cadastre o cliente em 'Gestão de Clientes' antes de prosseguir.",
             "erro",
           );
-          return; 
+          return;
         }
 
         const venda = {
@@ -636,7 +697,10 @@
             document.getElementById("fin-parcelas").selectedIndex = 0;
             document.getElementById("fin-parcelas").disabled = false;
             document.getElementById("lista-parcelas").innerHTML = "";
-
+            // ... logo abaixo da linha: document.getElementById("lista-parcelas").innerHTML = "";
+            const campoData = document.getElementById("fin-data-primeiro-venc");
+            if (campoData)
+              campoData.value = new Date().toLocaleDateString("en-CA");
             carregarProximoIdVenda();
           })
           .withFailureHandler((err) => {
@@ -658,15 +722,45 @@
           .withSuccessHandler((res) => {
             if (res.sucesso && res.dados.length > 0) {
               listaPagamentos = res.dados;
-              renderizarTabelaPagamentos(listaPagamentos);
+              aplicarFiltrosPagamentos(); // Envia para a central de filtros
             } else {
               listaPagamentos = [];
               if (tbody)
                 tbody.innerHTML =
                   '<tr><td colspan="6" class="p-10 text-center text-slate-400">Nenhuma parcela pendente encontrada. Aleluia!</td></tr>';
+              atualizarBadgeFiltro();
             }
           })
           .listarParcelasPendentes();
+      }
+
+      // NOVO: Central unificada de filtros (Texto + Status do Cartão)
+      function aplicarFiltrosPagamentos() {
+        atualizarBadgeFiltro();
+        let filtrados = listaPagamentos;
+
+        if (statusFiltroAtivo) {
+          filtrados = filtrados.filter((p) => p.status === statusFiltroAtivo);
+        }
+
+        const campoFiltro = document.getElementById("filtro-pagamentos");
+        if (campoFiltro) {
+          const termo = campoFiltro.value.toLowerCase();
+          if (termo !== "") {
+            filtrados = filtrados.filter(
+              (p) =>
+                p.cliente.toLowerCase().includes(termo) ||
+                p.idVenda.toLowerCase().includes(termo),
+            );
+          }
+        }
+
+        renderizarTabelaPagamentos(filtrados);
+      }
+
+      // Quando o cliente digitar algo, aciona a central unificada
+      function filtrarPagamentos() {
+        aplicarFiltrosPagamentos();
       }
 
       function renderizarTabelaPagamentos(lista) {
@@ -675,7 +769,7 @@
 
         if (lista.length === 0) {
           corpo.innerHTML =
-            '<tr><td colspan="6" class="p-10 text-center text-slate-400">Nenhum resultado para a pesquisa.</td></tr>';
+            '<tr><td colspan="6" class="p-10 text-center text-slate-400">Nenhum resultado para a pesquisa ou filtro.</td></tr>';
           return;
         }
 
@@ -702,4 +796,55 @@
               <td class="p-4 font-medium text-slate-800 text-sm">${p.cliente}</td>
               <td class="p-4 text-slate-500 text-sm">Nº ${p.numero}</td>
               <td class="p-4 text-sm ${corTextoData}">${dataBR} ${isAtrasado ? '<span class="text-[10px] bg-red-100 px-2 py-0.5 rounded ml-1 text-red-700">Atrasado</span>' : ""}</td>
-              <td class="p-4 text-right font-mono font-bold text-slate-800 text-sm">${valorFmt
+              <td class="p-4 text-right font-mono font-bold text-slate-800 text-sm">${valorFmt}</td>
+              <td class="p-4 text-center">
+                  <button onclick="confirmarBaixa('${p.idVenda}', ${p.numero})" class="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition-all shadow-sm flex items-center justify-center mx-auto gap-1">
+                    <i data-lucide="check" class="w-3 h-3"></i> DAR BAIXA
+                  </button>
+              </td>
+          </tr>
+        `;
+          })
+          .join("");
+
+        lucide.createIcons();
+      }
+
+      function confirmarBaixa(idVenda, numero) {
+        if (
+          confirm(
+            `Confirma o recebimento da parcela Nº ${numero} da venda ${idVenda}?`,
+          )
+        ) {
+          mostrarToast("A processar pagamento...", "info");
+
+          google.script.run
+            .withSuccessHandler((res) => {
+              if (res.sucesso) {
+                mostrarToast(res.mensagem, "sucesso");
+                carregarParcelasPendentes();
+                carregarDashboard();
+              } else {
+                mostrarToast("Erro: " + res.mensagem, "erro");
+              }
+            })
+            .confirmarPagamentoParcela(idVenda, numero);
+        }
+      }
+
+      // --- INICIALIZAÇÃO DA PÁGINA ---
+      window.onload = () => {
+        carregarDashboard();
+        carregarListaClientes();
+
+        const selectMetodo = document.getElementById("fin-metodo");
+        if (selectMetodo) {
+          selectMetodo.addEventListener("change", verificarMetodoPagamento);
+        }
+        const campoData = document.getElementById("fin-data-primeiro-venc");
+        // O formato 'en-CA' força o padrão YYYY-MM-DD que o input type="date" exige
+        if (campoData) campoData.value = new Date().toLocaleDateString("en-CA");
+      };
+    </script>
+  </body>
+</html>
