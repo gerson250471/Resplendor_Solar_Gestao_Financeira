@@ -79,6 +79,37 @@ Verificar versões e deploys:
 clasp deployments
 ```
 
+## 📲 Como "Instalar" o Sistema no Computador
+
+Para que o cliente acesse o sistema como se fosse um aplicativo instalado (com ícone na Área de Trabalho e sem barra de endereços), siga estes passos no Google Chrome:
+
+1.  Acesse o link do sistema: `https://script.google.com/macros/s/SEU_ID/exec`.
+2.  No canto superior direito, clique nos **três pontinhos** (Configurações).
+3.  Vá em **Salvar e Compartilhar** > **Instalar página como aplicativo**.
+4.  Dê o nome de **"Resplendor Solar"** e clique em **Instalar**.
+5.  **Pronto!** O Windows criará um atalho automático na Área de Trabalho e o sistema abrirá em uma janela exclusiva e profissional.
+
+## 🚀 Roadmap de Desenvolvimento
+
+### Fase 1: Gestão Financeira (Concluída ✅)
+
+- [x] Dashboard dinâmico com indicadores de recebíveis.
+- [x] Lógica de cores para parcelas em atraso (Visual Alerta).
+- [x] Sincronização em tempo real com Google Sheets via Apps Script.
+- [x] Filtros por status (Aberto, Urgente, Atrasado).
+
+### Fase 2: Identidade Digital & Presença (Em Andamento 🛠️)
+
+- [ ] Implementação de Landing Page "Em Breve" no domínio oficial.
+- [ ] Configuração de SEO básico para busca local em Taubaté.
+- [ ] Botão de acesso direto à Área Exclusiva (CRM).
+
+### Fase 3: Expansão CRM (Planejado 📅)
+
+- [ ] Transformação da ferramenta em CRM especializado para o setor solar.
+- [ ] Automação de notificações de cobrança via WhatsApp/E-mail.
+- [ ] Relatórios de performance de vendas mensal.
+
 ## 👨‍💻 Desenvolvido por
 
 ### MAJB Sistemas

@@ -11,7 +11,10 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-
+    <script
+      type="text/javascript"
+      src="https://www.gstatic.com/charts/loader.js"
+    ></script>
     <style>
       body {
         font-family: "Inter", sans-serif;
@@ -231,43 +234,62 @@
 
       // --- FUNÇÕES DO DASHBOARD ---
       function carregarDashboard() {
-        const ids = [
-          "dash-total",
-          "dash-vendas",
-          "dash-aberto",
-          "dash-urgente",
-          "dash-atraso",
-        ];
-        ids.forEach((id) => {
-          const el = document.getElementById(id);
-          if (el) el.innerText = "...";
-        });
-
         google.script.run
           .withSuccessHandler((res) => {
             if (res.sucesso) {
-              const atualizarSeExistir = (id, valor) => {
-                const el = document.getElementById(id);
-                if (el) el.innerText = valor;
-              };
+              // Preenche os Cards
+              document.getElementById("dash-total").innerText =
+                "R$ " + res.dados.total;
+              document.getElementById("dash-vendas").innerText =
+                res.dados.vendasMes;
+              document.getElementById("dash-aberto").innerText =
+                res.dados.aberto;
+              document.getElementById("dash-urgente").innerText =
+                res.dados.urgente;
+              document.getElementById("dash-atraso").innerText =
+                res.dados.atraso;
 
-              atualizarSeExistir("dash-total", `R$ ${res.dados.total}`);
-              atualizarSeExistir("dash-vendas", res.dados.vendasMes);
-              atualizarSeExistir("dash-aberto", res.dados.aberto);
-              atualizarSeExistir("dash-urgente", res.dados.urgente);
-              atualizarSeExistir("dash-atraso", res.dados.atraso);
-
-              lucide.createIcons();
-            } else {
-              mostrarToast(
-                "Erro ao carregar Dashboard: " + res.mensagem,
-                "erro",
-              );
+              // Desenha os Gráficos
+              desenharGraficos(res.graficos.pagas, res.graficos.receber);
             }
           })
           .getResumoFinanceiro();
       }
 
+      function desenharGraficos(dadosPagas, dadosReceber) {
+        google.charts.load("current", {
+          packages: ["corechart"],
+          language: "pt-br",
+        });
+
+        google.charts.setOnLoadCallback(() => {
+          // 1. Gráfico de Recebidos (Verde)
+          const dataPagas = google.visualization.arrayToDataTable(dadosPagas);
+          const chartPagas = new google.visualization.AreaChart(
+            document.getElementById("grafico_pagas"),
+          );
+          chartPagas.draw(dataPagas, {
+            colors: ["#10b981"],
+            areaOpacity: 0.1,
+            legend: { position: "none" },
+            vAxis: { format: "currency" },
+            chartArea: { width: "85%", height: "70%" },
+          });
+
+          // 2. Gráfico de Previsão (Cores dinâmicas do servidor)
+          const dataRec = google.visualization.arrayToDataTable(dadosReceber);
+          const chartRec = new google.visualization.ColumnChart(
+            document.getElementById("grafico_receber"),
+          );
+          chartRec.draw(dataRec, {
+            // REMOVIDO: colors: [...atualizarBadgeFiltro]
+            // Deixamos sem a propriedade 'colors' para que ele use o 'role: style' do servidor
+            legend: { position: "none" },
+            vAxis: { format: "currency" },
+            chartArea: { width: "85%", height: "70%" },
+          });
+        });
+      }
       // --- INTEGRAÇÃO DASHBOARD -> PAGAMENTOS ---
       // --- INTEGRAÇÃO DASHBOARD E COMBOBOX -> PAGAMENTOS ---
       function abrirFiltroStatus(status) {

@@ -45,7 +45,22 @@
       <p class="text-3xl font-bold text-red-600" id="dash-atraso">0</p>
     </div>
   </div>
-
+  <!-- Espaço para Gráfico -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+    <div class="finance-card">
+      <h3 class="text-sm font-bold text-slate-500 uppercase mb-4">
+        Fluxo de Recebimento Pago (Ano)
+      </h3>
+      <div id="grafico_pagas" style="width: 100%; height: 300px"></div>
+    </div>
+    <div class="finance-card">
+      <h3 class="text-sm font-bold text-slate-500 uppercase mb-4">
+        Previsão de Recebíveis (Ano)
+      </h3>
+      <div id="grafico_receber" style="width: 100%; height: 300px"></div>
+    </div>
+  </div>
+  <!--  -->
   <button
     onclick="carregarDashboard()"
     class="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-all text-sm font-bold"
