@@ -90,6 +90,63 @@
   </head>
   <body class="flex h-screen overflow-hidden relative">
     <div
+      id="aviso-ambiente"
+      style="
+        display: none;
+        background-color: #f59e0b;
+        color: white;
+        text-align: center;
+        padding: 5px;
+        font-size: 12px;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        z-index: 9999;
+      "
+    >
+      <i
+        data-lucide="alert-triangle"
+        style="
+          width: 14px;
+          height: 14px;
+          display: inline-block;
+          vertical-align: middle;
+          margin-right: 5px;
+        "
+      ></i>
+      VOCÊ ESTÁ NO AMBIENTE DE TESTES (HOMOLOGAÇÃO) - OS DADOS NÃO SÃO REAIS
+    </div>
+    <!-- Modal de Segurança -->
+    <div
+      id="login-overlay"
+      class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center"
+    >
+      <div
+        class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-slate-900"
+      >
+        <h2 class="text-2xl font-bold mb-6 text-center">Acesso Restrito</h2>
+        <input
+          type="text"
+          id="user-login"
+          placeholder="Usuário"
+          class="w-full p-3 mb-4 border rounded-lg"
+        />
+        <input
+          type="password"
+          id="pass-login"
+          placeholder="Senha"
+          class="w-full p-3 mb-6 border rounded-lg"
+        />
+        <button
+          onclick="fazerLogin()"
+          class="w-full bg-amber-500 text-white font-bold py-3 rounded-lg hover:bg-amber-600 transition-all"
+        >
+          ENTRAR NO SISTEMA
+        </button>
+      </div>
+    </div>
+    <!--  -->
+    <div
       id="toast-container"
       class="fixed top-4 right-4 z-50 flex flex-col gap-3"
     ></div>
@@ -873,18 +930,17 @@
         }
       }
 
+      function carregarListaClientes() {
+        const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+        const aba = ss.getSheetByName("Clientes");
+        return aba ? aba.getDataRange().getValues() : [];
+      }
+
       // --- INICIALIZAÇÃO DA PÁGINA ---
       window.onload = () => {
-        carregarDashboard();
-        carregarListaClientes();
-
-        const selectMetodo = document.getElementById("fin-metodo");
-        if (selectMetodo) {
-          selectMetodo.addEventListener("change", verificarMetodoPagamento);
-        }
-        const campoData = document.getElementById("fin-data-primeiro-venc");
-        // O formato 'en-CA' força o padrão YYYY-MM-DD que o input type="date" exige
-        if (campoData) campoData.value = new Date().toLocaleDateString("en-CA");
+        // Removido carregarDashboard() daqui para evitar erro de acesso negado antes do login
+        const loginOverlay = document.getElementById("login-overlay");
+        if (loginOverlay) loginOverlay.style.display = "flex";
       };
     </script>
   </body>

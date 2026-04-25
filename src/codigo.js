@@ -1,10 +1,26 @@
 /**
- * SISTEMA FINANCEIRO E CRM - RESPLENDOR SOLAR
- * Desenvolvido por: MAJB SISTEMAS
- * Local: Taubaté/SP
+ * CONFIGURAÇÃO DINÂMICA DE AMBIENTE - MAJB SISTEMAS
  */
+function getConfig() {
+  const URL_ATUAL = ScriptApp.getService().getUrl();
+  
+  // IDs das Planilhas
+  const ID_PRODUCAO = "1GY1tukFd1mOwhbwyZTvEXApHdktL5SuzaOKsqHHEEr8"; // Sua planilha oficial
+  const ID_HOMOLOGACAO = "1WWzsJIpwx8JE7yt6WKwDVt0OU3Mg_gQ3RY5ILH3yrlM"; // Cole o ID da cópia aqui
 
-const SPREADSHEET_ID = "1GY1tukFd1mOwhbwyZTvEXApHdktL5SuzaOKsqHHEEr8";
+  // Lógica: Se estiver no editor de scripts ou num subdomínio de teste
+  const ehHomologacao = URL_ATUAL.indexOf("script.google.com") !== -1 || URL_ATUAL.indexOf("homologacao") !== -1;
+
+  return {
+    spreadsheetId: ehHomologacao ? ID_HOMOLOGACAO : ID_PRODUCAO,
+    ambiente: ehHomologacao ? "⚠️ HOMOLOGAÇÃO (TESTES)" : "✅ PRODUÇÃO",
+    isDev: ehHomologacao
+  };
+}
+
+// Constante global que será usada em todas as outras funções
+const CONFIG = getConfig();
+const SPREADSHEET_ID = CONFIG.spreadsheetId;
 
 function doGet(e) {
   const template = HtmlService.createTemplateFromFile('index');
@@ -25,16 +41,16 @@ function include(filename) {
 function getResumoFinanceiro() {
   try {
     // 🚀 Atualiza status (Atraso/Urgente) antes de processar
-    atualizarStatusParcelas(); 
-    
+    atualizarStatusParcelas();
+
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const abaParcelas = ss.getSheetByName("Parcelas");
     const abaVendas = ss.getSheetByName("Vendas");
-    
+
     const hoje = new Date();
     const mesAtual = hoje.getMonth();
     const anoAtual = hoje.getFullYear();
-    
+
     let totalCentavosAReceber = 0;
     let contadorVendasMes = 0;
     let qtdAberto = 0, qtdUrgente = 0, qtdAtraso = 0;
@@ -72,7 +88,7 @@ function getResumoFinanceiro() {
           } else if (status !== "") {
             // SOMA GLOBAL PARA OS CARDS (Bate com a planilha: 175, 264, 14)
             totalCentavosAReceber += Math.round(valor * 100);
-            
+
             if (status === "EM ABERTO") qtdAberto++;
             if (status === "URGENTE") qtdUrgente++;
             if (status === "EM ATRASO") qtdAtraso++;
@@ -91,7 +107,7 @@ function getResumoFinanceiro() {
 
     mesesLabel.forEach((m, i) => {
       // Pagos sempre Verde
-      payloadPagas.push([m, valoresPagasMes[i] / 100, "color: #10b981"]); 
+      payloadPagas.push([m, valoresPagasMes[i] / 100, "color: #10b981"]);
 
       // Previsão: Vermelho para meses passados com valores pendentes
       let corBarra = "#3b82f6"; // Azul padrão
@@ -101,19 +117,19 @@ function getResumoFinanceiro() {
       payloadAReceber.push([m, valoresAReceberMes[i] / 100, `color: ${corBarra}`]);
     });
 
-    return { 
-      sucesso: true, 
-      dados: { 
-        total: (totalCentavosAReceber / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 }), 
-        vendasMes: contadorVendasMes.toString(), 
-        aberto: qtdAberto, 
-        urgente: qtdUrgente, 
-        atraso: qtdAtraso 
+    return {
+      sucesso: true,
+      dados: {
+        total: (totalCentavosAReceber / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+        vendasMes: contadorVendasMes.toString(),
+        aberto: qtdAberto,
+        urgente: qtdUrgente,
+        atraso: qtdAtraso
       },
       graficos: { pagas: payloadPagas, receber: payloadAReceber }
     };
-  } catch (e) { 
-    return { sucesso: false, mensagem: e.message }; 
+  } catch (e) {
+    return { sucesso: false, mensagem: e.message };
   }
 }
 
@@ -125,23 +141,23 @@ function atualizarStatusParcelas() {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const aba = ss.getSheetByName("Parcelas");
     if (!aba) return;
-    
+
     const dados = aba.getDataRange().getValues();
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
-    
+
     const colunaStatus = [];
 
     for (let i = 1; i < dados.length; i++) {
       let statusAtual = (dados[i][4] || "").toString().toUpperCase().trim();
       let dataVenc = new Date(dados[i][2]);
       let novoStatus = statusAtual;
-      
+
       if (statusAtual !== "PAGO" && !isNaN(dataVenc.getTime())) {
         dataVenc.setHours(0, 0, 0, 0);
         const diffTempo = dataVenc.getTime() - hoje.getTime();
         const diffDias = Math.ceil(diffTempo / (1000 * 3600 * 24));
-        
+
         if (diffDias < 0) {
           novoStatus = "EM ATRASO";
         } else if (diffDias <= 10) {
@@ -158,5 +174,100 @@ function atualizarStatusParcelas() {
     }
   } catch (e) {
     console.error("Erro ao atualizar status: " + e.message);
+  }
+}
+
+/**
+ * Gera um Hash SHA-256 usando o login como 'Salt' para maior segurança
+ */
+function gerarHashSeguro(usuario, senha) {
+  // Combinamos o login com a senha para criar um valor único por usuário
+  const entradaCombinada = usuario.toLowerCase().trim() + senha;
+
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, entradaCombinada);
+  let hash = '';
+  for (let i = 0; i < digest.length; i++) {
+    let byte = digest[i];
+    if (byte < 0) byte += 256;
+    let hex = byte.toString(16);
+    if (hex.length === 1) hex = '0' + hex;
+    hash += hex;
+  }
+  return hash;
+}
+
+function aplicarNovoHashSeguro() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const aba = ss.getSheetByName("Usuarios");
+  const dados = aba.getDataRange().getValues();
+
+  for (let i = 1; i < dados.length; i++) {
+    const usuario = dados[i][1].toString().trim(); // Coluna B
+    const senhaPura = dados[i][2].toString().trim(); // Coluna C
+    
+    if (senhaPura !== "" && senhaPura.length !== 64) {
+      const novoHash = gerarHashSeguro(usuario, senhaPura);
+      aba.getRange(i + 1, 3).setValue(novoHash); // Salva o novo hash na Coluna C
+    }
+  }
+  Browser.msgBox("Segurança Atualizada", "Hashes recriados com a técnica de Salt (Login+Senha).", Browser.Buttons.OK);
+}
+
+function validarAcesso(usuario, senha) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const aba = ss.getSheetByName("Usuarios");
+    const dados = aba.getDataRange().getValues();
+    const hashDigitado = gerarHashSeguro(usuario, senha); // Usa sua lógica de Salt
+    
+    for (let i = 1; i < dados.length; i++) {
+      if (usuario === dados[i][1] && hashDigitado === dados[i][2]) {
+        return { 
+          sucesso: true, 
+          nome: dados[i][0], 
+          nivel: dados[i][3],
+          precisaTrocar: dados[i][4] === "SIM" // Coluna E
+        };
+      }
+    }
+    return { sucesso: false, mensagem: "Usuário ou senha incorretos." };
+  } catch (e) {
+    return { sucesso: false, mensagem: "Erro: " + e.message };
+  }
+}
+
+function atualizarSenhaDefinitiva(usuario, novaSenha) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const aba = ss.getSheetByName("Usuarios");
+  const dados = aba.getDataRange().getValues();
+  
+  for (let i = 1; i < dados.length; i++) {
+    if (usuario === dados[i][1]) {
+      const novoHash = gerarHashSeguro(usuario, novaSenha);
+      aba.getRange(i + 1, 3).setValue(novoHash); // Coluna C
+      aba.getRange(i + 1, 5).setValue("NAO");    // Coluna E
+      return true;
+    }
+  }
+  return false;
+}
+
+function processarTrocaSenha(usuario, novaSenha) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const aba = ss.getSheetByName("Usuarios");
+    const dados = aba.getDataRange().getValues();
+    
+    for (let i = 1; i < dados.length; i++) {
+      if (usuario === dados[i][1]) { // Coluna B
+        const novoHash = gerarHashSeguro(usuario, novaSenha);
+        aba.getRange(i + 1, 3).setValue(novoHash); // Atualiza Hash na Coluna C
+        aba.getRange(i + 1, 5).setValue("NAO");    // Muda Coluna E para "NAO"
+        return { sucesso: true };
+      }
+    }
+    return { sucesso: false, mensagem: "Usuário não encontrado." };
+  } catch (e) {
+    return { sucesso: false, mensagem: e.message };
   }
 }
