@@ -6,6 +6,9 @@
     <title>Resplendor Solar - Master</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
@@ -15,6 +18,7 @@
       type="text/javascript"
       src="https://www.gstatic.com/charts/loader.js"
     ></script>
+
     <style>
       body {
         font-family: "Inter", sans-serif;
@@ -38,40 +42,17 @@
         }
       }
 
-      /* Animações do Toast */
-      @keyframes slideInRight {
-        from {
-          transform: translateX(100%);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-      @keyframes fadeOut {
-        from {
-          opacity: 1;
-          transform: translateX(0);
-        }
-        to {
-          opacity: 0;
-          transform: translateX(100%);
-        }
-      }
-      .toast-enter {
-        animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      }
-      .toast-exit {
-        animation: fadeOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      }
-
-      .finance-card {
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        padding: 24px;
+      #login-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #0f172a;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       .input-field {
         width: 100%;
@@ -82,105 +63,71 @@
         transition: all 0.2s;
         font-size: 0.9rem;
       }
-      .input-field:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-      }
     </style>
   </head>
   <body class="flex h-screen overflow-hidden relative">
+    <? if (config.isDev) { ?>
     <div
-      id="aviso-ambiente"
       style="
-        display: none;
-        background-color: #f59e0b;
-        color: white;
+        background-color: #fef3c7;
+        color: #92400e;
         text-align: center;
-        padding: 5px;
-        font-size: 12px;
+        padding: 8px;
         font-weight: bold;
-        position: sticky;
+        border-bottom: 2px solid #f59e0b;
+        position: absolute;
         top: 0;
-        z-index: 9999;
+        left: 0;
+        width: 100%;
+        z-index: 10000;
       "
     >
-      <i
-        data-lucide="alert-triangle"
-        style="
-          width: 14px;
-          height: 14px;
-          display: inline-block;
-          vertical-align: middle;
-          margin-right: 5px;
-        "
-      ></i>
-      VOCÊ ESTÁ NO AMBIENTE DE TESTES (HOMOLOGAÇÃO) - OS DADOS NÃO SÃO REAIS
+      <?= config.ambiente ?>
     </div>
-    <!-- Modal de Segurança -->
-    <div
-      id="login-overlay"
-      class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center"
-    >
-      <div
-        class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-slate-900"
-      >
-        <h2 class="text-2xl font-bold mb-6 text-center">Acesso Restrito</h2>
-        <input
-          type="text"
-          id="user-login"
-          placeholder="Usuário"
-          class="w-full p-3 mb-4 border rounded-lg"
-        />
-        <input
-          type="password"
-          id="pass-login"
-          placeholder="Senha"
-          class="w-full p-3 mb-6 border rounded-lg"
-        />
-        <button
-          onclick="fazerLogin()"
-          class="w-full bg-amber-500 text-white font-bold py-3 rounded-lg hover:bg-amber-600 transition-all"
-        >
-          ENTRAR NO SISTEMA
-        </button>
-      </div>
-    </div>
-    <!--  -->
-    <div
-      id="toast-container"
-      class="fixed top-4 right-4 z-50 flex flex-col gap-3"
-    ></div>
+    <? } ?>
 
-    <div
-      id="modal-exclusao"
-      class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity"
-    >
+    <div id="login-overlay">
       <div
-        class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-sm text-center transform transition-all"
+        class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center"
       >
         <div
-          class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-50 mb-4 border-4 border-red-100"
+          class="bg-blue-600 w-16 h-16 rounded-xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-6 shadow-lg"
         >
-          <i data-lucide="alert-triangle" class="h-6 w-6 text-red-600"></i>
+          MAJB
         </div>
-        <h3 class="text-lg font-bold text-slate-800 mb-2">
-          Confirmar Exclusão
-        </h3>
-        <p id="msg-exclusao-modal" class="text-sm text-slate-500 mb-6">
-          Tem certeza que deseja excluir?
+        <h2 class="text-2xl font-bold mb-2 text-slate-800">Resplendor Solar</h2>
+        <p class="text-slate-500 mb-8 text-sm italic">
+          Ambiente de Gestão Centralizada
         </p>
-        <div class="flex justify-center gap-3">
+
+        <div class="text-left space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
+              >Utilizador</label
+            >
+            <input
+              type="text"
+              id="user-login"
+              class="input-field"
+              placeholder="Ex: gerson"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
+              >Senha</label
+            >
+            <input
+              type="password"
+              id="pass-login"
+              class="input-field"
+              placeholder="••••••••"
+            />
+          </div>
           <button
-            onclick="fecharModalExclusao()"
-            class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-colors text-sm"
+            onclick="fazerLogin()"
+            class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all shadow-md mt-2"
           >
-            Cancelar
-          </button>
-          <button
-            onclick="confirmarExclusao()"
-            class="flex-1 px-4 py-2.5 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 shadow-md transition-colors text-sm"
-          >
-            Sim, Excluir
+            ACESSAR SISTEMA
           </button>
         </div>
       </div>
@@ -188,23 +135,22 @@
 
     <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
       <div class="p-6">
-        <h1 class="text-xl font-bold text-blue-400">Resplendor Solar</h1>
-        <p class="text-xs text-slate-400 mt-1">MAJB Sistemas CRM</p>
+        <h1 class="text-xl font-bold text-blue-400">MAJB CRM</h1>
+        <p class="text-xs text-slate-500 mt-1">v1.5.2 Modular</p>
       </div>
-      <nav class="flex-1 px-4 space-y-2">
+      <nav class="flex-1 px-4 space-y-1">
         <button
           onclick="navegarPara('dashboard')"
           class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-left text-sm font-medium"
         >
-          <i data-lucide="layout-dashboard" class="w-5 h-5 text-blue-400"></i>
+          <i data-lucide="layout-dashboard" class="w-4 h-4 text-blue-400"></i>
           Dashboard
         </button>
         <button
           onclick="navegarPara('clientes')"
           class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-left text-sm font-medium"
         >
-          <i data-lucide="users" class="w-5 h-5 text-green-400"></i> Gestão de
-          Clientes
+          <i data-lucide="users" class="w-4 h-4 text-green-400"></i> Clientes
         </button>
         <button
           onclick="navegarPara('financeiro')"
@@ -212,89 +158,159 @@
         >
           <i
             data-lucide="circle-dollar-sign"
-            class="w-5 h-5 text-yellow-400"
+            class="w-4 h-4 text-yellow-400"
           ></i>
-          Novo Lançamento
+          Lançamentos
         </button>
         <button
           onclick="navegarPara('pagamentos')"
           class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors text-left text-sm font-medium"
         >
-          <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
-          Baixa de Parcelas
+          <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+          Baixas
         </button>
       </nav>
-      <div
-        class="p-4 border-t border-slate-800 text-xs text-center text-slate-500"
-      >
-        Versão 1.3.1 Modular
-      </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-6 md:p-8">
+    <main class="flex-1 overflow-y-auto p-6 md:p-10">
       <?!= include('dashboard'); ?> <?!= include('clientes'); ?> <?!=
       include('financeiro'); ?> <?!= include('pagamentos'); ?>
+
+      <section id="view-troca-senha" class="page-view">
+        <div class="finance-card max-w-md mx-auto mt-10">
+          <h2 class="text-2xl font-bold text-slate-800 mb-2 text-center">
+            Nova Senha
+          </h2>
+          <p class="text-slate-500 text-sm text-center mb-6 italic">
+            Este é o seu primeiro acesso. Por segurança, escolha uma senha
+            definitiva.
+          </p>
+
+          <div class="space-y-4 text-left">
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                >Nova Senha</label
+              >
+              <input
+                type="password"
+                id="nova-senha"
+                class="input-field"
+                placeholder="Mínimo 4 caracteres"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                >Confirmar Senha</label
+              >
+              <input
+                type="password"
+                id="confirma-senha"
+                class="input-field"
+                placeholder="Repita a nova senha"
+              />
+            </div>
+            <button
+              onclick="salvarNovaSenha()"
+              class="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 transition-all shadow-lg"
+            >
+              ATUALIZAR E ENTRAR
+            </button>
+          </div>
+        </div>
+      </section>
 
       <datalist id="clientes-list"></datalist>
     </main>
 
+    <div
+      id="toast-container"
+      class="fixed top-6 right-6 z-[10001] flex flex-col gap-3"
+    ></div>
+
     <script>
       lucide.createIcons();
+      google.charts.load("current", { packages: ["corechart"] });
 
-      // --- SISTEMA DE NOTIFICAÇÃO TOAST ---
-      function mostrarToast(mensagem, tipo = "sucesso") {
-        const container = document.getElementById("toast-container");
-        const toast = document.createElement("div");
-
-        let bgColor, icone;
-        if (tipo === "sucesso") {
-          bgColor = "bg-green-600";
-          icone = `<svg class="w-5 h-5 mr-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
-        } else if (tipo === "erro") {
-          bgColor = "bg-red-600";
-          icone = `<svg class="w-5 h-5 mr-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-        } else {
-          bgColor = "bg-blue-600";
-          icone = `<svg class="w-5 h-5 mr-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+      // 1. LÓGICA DE LOGIN COM TRAVA DE SEGURANÇA
+      function fazerLogin() {
+        const usuario = document.getElementById("user-login").value;
+        const senha = document.getElementById("pass-login").value;
+        if (!usuario || !senha) {
+          mostrarToast("Preencha todos os campos", "erro");
+          return;
         }
 
-        toast.className = `toast-enter flex items-center p-4 w-72 md:w-80 rounded-lg shadow-xl text-white font-medium text-sm ${bgColor}`;
-        toast.innerHTML = `${icone} <span>${mensagem}</span>`;
-        container.appendChild(toast);
+        mostrarToast("Validando acesso...", "info");
 
-        setTimeout(() => {
-          toast.classList.replace("toast-enter", "toast-exit");
-          setTimeout(() => {
-            toast.remove();
-          }, 300);
-        }, 3500);
-      }
-
-      // --- VARIÁVEIS GLOBAIS ---
-      let listaCli = [];
-      let idClienteParaExcluir = null;
-      let listaPagamentos = [];
-      let statusFiltroAtivo = ""; // Variável nova para controlar o filtro do Dashboard
-
-      // --- NAVEGAÇÃO SPA ---
-      function navegarPara(tela) {
-        document
-          .querySelectorAll(".page-view")
-          .forEach((el) => el.classList.remove("active"));
-        document.getElementById(`view-${tela}`).classList.add("active");
-
-        if (tela === "dashboard") carregarDashboard();
-        if (tela === "clientes") carregarListaClientes();
-        if (tela === "financeiro") carregarProximoIdVenda();
-        if (tela === "pagamentos") carregarParcelasPendentes();
-      }
-
-      // --- FUNÇÕES DO DASHBOARD ---
-      function carregarDashboard() {
         google.script.run
           .withSuccessHandler((res) => {
             if (res.sucesso) {
-              // Preenche os Cards
+              // Salva os dados na sessão do navegador para uso posterior
+              sessionStorage.setItem("usuarioAtivo", usuario);
+              sessionStorage.setItem("nivelAcesso", res.nivel);
+
+              document.getElementById("login-overlay").style.display = "none";
+
+              // Verifica se o servidor sinalizou a troca de senha
+              if (res.precisaTrocar) {
+                navegarPara("troca-senha");
+                mostrarToast(
+                  "Ação necessária: Altere sua senha inicial.",
+                  "info",
+                );
+              } else {
+                navegarPara("dashboard");
+                mostrarToast("Bem-vindo, " + res.nome);
+              }
+            } else {
+              mostrarToast(res.mensagem, "erro");
+            }
+          })
+          .validarAcesso(usuario, senha);
+      }
+
+      // 2. LÓGICA PARA GRAVAR A NOVA SENHA
+      function salvarNovaSenha() {
+        const nova = document.getElementById("nova-senha").value;
+        const confirma = document.getElementById("confirma-senha").value;
+        const usuario = sessionStorage.getItem("usuarioAtivo");
+
+        if (nova.length < 4) {
+          mostrarToast("A senha deve ter no mínimo 4 caracteres.", "erro");
+          return;
+        }
+        if (nova !== confirma) {
+          mostrarToast("As senhas digitadas não coincidem.", "erro");
+          return;
+        }
+
+        mostrarToast("Atualizando segurança...", "info");
+
+        google.script.run
+          .withSuccessHandler((sucesso) => {
+            if (sucesso) {
+              mostrarToast("Senha atualizada com sucesso!");
+              navegarPara("dashboard");
+            } else {
+              mostrarToast(
+                "Erro ao gravar nova senha. Tente novamente.",
+                "erro",
+              );
+            }
+          })
+          .atualizarSenhaDefinitiva(usuario, nova);
+      }
+
+      // 3. CARREGAMENTO DO DASHBOARD E GRÁFICOS
+      function carregarDashboard() {
+        const dashTotal = document.getElementById("dash-total");
+        if (dashTotal) dashTotal.innerText = "Carregando...";
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res.sucesso) {
               document.getElementById("dash-total").innerText =
                 "R$ " + res.dados.total;
               document.getElementById("dash-vendas").innerText =
@@ -306,641 +322,76 @@
               document.getElementById("dash-atraso").innerText =
                 res.dados.atraso;
 
-              // Desenha os Gráficos
-              desenharGraficos(res.graficos.pagas, res.graficos.receber);
+              if (
+                google.visualization &&
+                google.visualization.arrayToDataTable
+              ) {
+                const dataPagas = google.visualization.arrayToDataTable(
+                  res.graficos.pagas,
+                );
+                const chartPagas = new google.visualization.ColumnChart(
+                  document.getElementById("grafico_pagas"),
+                );
+                chartPagas.draw(dataPagas, {
+                  legend: { position: "none" },
+                  animation: { startup: true, duration: 1000, easing: "out" },
+                });
+
+                const dataReceber = google.visualization.arrayToDataTable(
+                  res.graficos.receber,
+                );
+                const chartReceber = new google.visualization.ColumnChart(
+                  document.getElementById("grafico_receber"),
+                );
+                chartReceber.draw(dataReceber, {
+                  legend: { position: "none" },
+                  animation: { startup: true, duration: 1000, easing: "out" },
+                });
+              }
+            } else {
+              mostrarToast(
+                "Erro ao carregar gráficos: " + res.mensagem,
+                "erro",
+              );
             }
+          })
+          .withFailureHandler((err) => {
+            mostrarToast("Erro de comunicação: " + err.message, "erro");
           })
           .getResumoFinanceiro();
       }
 
-      function desenharGraficos(dadosPagas, dadosReceber) {
-        google.charts.load("current", {
-          packages: ["corechart"],
-          language: "pt-br",
-        });
-
-        google.charts.setOnLoadCallback(() => {
-          // 1. Gráfico de Recebidos (Verde)
-          const dataPagas = google.visualization.arrayToDataTable(dadosPagas);
-          const chartPagas = new google.visualization.AreaChart(
-            document.getElementById("grafico_pagas"),
-          );
-          chartPagas.draw(dataPagas, {
-            colors: ["#10b981"],
-            areaOpacity: 0.1,
-            legend: { position: "none" },
-            vAxis: { format: "currency" },
-            chartArea: { width: "85%", height: "70%" },
-          });
-
-          // 2. Gráfico de Previsão (Cores dinâmicas do servidor)
-          const dataRec = google.visualization.arrayToDataTable(dadosReceber);
-          const chartRec = new google.visualization.ColumnChart(
-            document.getElementById("grafico_receber"),
-          );
-          chartRec.draw(dataRec, {
-            // REMOVIDO: colors: [...atualizarBadgeFiltro]
-            // Deixamos sem a propriedade 'colors' para que ele use o 'role: style' do servidor
-            legend: { position: "none" },
-            vAxis: { format: "currency" },
-            chartArea: { width: "85%", height: "70%" },
-          });
-        });
-      }
-      // --- INTEGRAÇÃO DASHBOARD -> PAGAMENTOS ---
-      // --- INTEGRAÇÃO DASHBOARD E COMBOBOX -> PAGAMENTOS ---
-      function abrirFiltroStatus(status) {
-        statusFiltroAtivo = status;
-
-        const campoBusca = document.getElementById("filtro-pagamentos");
-        if (campoBusca) campoBusca.value = ""; // Limpa a busca digitada
-
-        // Sincroniza o Combobox visualmente com o clique do Dashboard
-        const comboStatus = document.getElementById("filtro-status-pagamentos");
-        if (comboStatus) comboStatus.value = status;
-
-        navegarPara("pagamentos");
-      }
-
-      function limparFiltroStatus() {
-        statusFiltroAtivo = "";
-
-        // Limpa o Combobox
-        const comboStatus = document.getElementById("filtro-status-pagamentos");
-        if (comboStatus) comboStatus.value = "";
-
-        aplicarFiltrosPagamentos();
-      }
-
-      function mudarStatusCombobox() {
-        // Esta função roda quando o utilizador escolhe manualmente no Combobox
-        const comboStatus = document.getElementById("filtro-status-pagamentos");
-        statusFiltroAtivo = comboStatus ? comboStatus.value : "";
-        aplicarFiltrosPagamentos();
-      }
-
-      function atualizarBadgeFiltro() {
-        const badge = document.getElementById("badge-filtro");
-        if (!badge) return;
-
-        if (statusFiltroAtivo) {
-          let cor =
-            statusFiltroAtivo === "EM ATRASO"
-              ? "bg-red-100 text-red-700 border-red-200"
-              : statusFiltroAtivo === "URGENTE"
-                ? "bg-amber-100 text-amber-700 border-amber-200"
-                : "bg-emerald-100 text-emerald-700 border-emerald-200";
-
-          badge.innerHTML = `<span class="px-3 py-1 text-xs font-bold rounded-full border ${cor}">Filtrando: ${statusFiltroAtivo}</span>
-                             <button onclick="limparFiltroStatus()" class="text-xs text-slate-500 hover:text-red-600 underline ml-2 transition-colors">Remover Filtro</button>`;
-          badge.classList.remove("hidden");
-        } else {
-          badge.classList.add("hidden");
-          badge.innerHTML = "";
-        }
-      }
-
-      // --- FUNÇÕES DE CLIENTES ---
-      function gerarProximoId() {
-        if (!listaCli || listaCli.length === 0) return "CLI-1";
-        let maxNum = 0;
-        listaCli.forEach((c) => {
-          const idStr = String(c.id).trim();
-          if (idStr.startsWith("CLI-")) {
-            const num = parseInt(idStr.replace("CLI-", ""), 10);
-            if (!isNaN(num) && num > maxNum) maxNum = num;
-          }
-        });
-        return `CLI-${maxNum + 1}`;
-      }
-
-      function limparFormularioCliente() {
+      function navegarPara(tela) {
         document
-          .querySelectorAll("#view-clientes input")
-          .forEach((i) => (i.value = ""));
-        document.getElementById("cli-cidade").value = "Taubaté";
-        document.getElementById("cli-id").value = gerarProximoId();
-        document.getElementById("cli-id").removeAttribute("readonly");
-        document
-          .getElementById("cli-id")
-          .classList.remove("bg-slate-100", "text-slate-500");
+          .querySelectorAll(".page-view")
+          .forEach((el) => el.classList.remove("active"));
+        const view = document.getElementById(`view-${tela}`);
+        if (view) view.classList.add("active");
 
-        const btnSalvar = document.getElementById("btnSalvarCliente");
-        btnSalvar.innerText = "Salvar Cadastro";
-        btnSalvar.classList.replace("bg-blue-600", "bg-green-600");
-        btnSalvar.classList.replace("hover:bg-blue-700", "hover:bg-green-700");
-        btnSalvar.disabled = false;
-
-        document.getElementById("btnCancelarCliente").classList.add("hidden");
+        // Gatilhos de carregamento
+        if (tela === "dashboard") carregarDashboard();
+        if (tela === "clientes") carregarListaClientes();
+        if (tela === "financeiro") carregarProximoIdVenda();
+        if (tela === "pagamentos") carregarParcelasPendentes();
       }
 
-      function salvarNovoCliente() {
-        const btn = document.getElementById("btnSalvarCliente");
-        const nomeDigitado = String(
-          document.getElementById("cli-nome").value,
-        ).trim();
-        const celularDigitado = String(
-          document.getElementById("cli-celular").value,
-        ).trim();
-        let idDigitado = String(document.getElementById("cli-id").value).trim();
-
-        if (!idDigitado || !nomeDigitado) {
-          mostrarToast("Atenção: ID e Nome são obrigatórios.", "erro");
-          return;
-        }
-
-        const isEditando = document
-          .getElementById("cli-id")
-          .hasAttribute("readonly");
-        if (!isEditando && celularDigitado !== "") {
-          const clienteExistente = listaCli.find(
-            (c) =>
-              c.descricao.toLowerCase() === nomeDigitado.toLowerCase() &&
-              c.celular === celularDigitado,
-          );
-          if (clienteExistente) {
-            idDigitado = clienteExistente.id;
-            mostrarToast("Cliente encontrado! Atualizando cadastro...", "info");
-          }
-        }
-
-        const dados = {
-          id: idDigitado,
-          descricao: nomeDigitado,
-          celular: celularDigitado,
-          cidade: String(document.getElementById("cli-cidade").value).trim(),
-          bairro: String(document.getElementById("cli-bairro").value).trim(),
-          endereco: String(
-            document.getElementById("cli-endereco").value,
-          ).trim(),
-        };
-
-        btn.disabled = true;
-        btn.innerText = "Salvando...";
-
-        google.script.run
-          .withSuccessHandler((res) => {
-            mostrarToast(res.mensagem, "sucesso");
-            limparFormularioCliente();
-            carregarListaClientes();
-          })
-          .salvarCliente(dados);
+      function mostrarToast(msg, tipo = "sucesso") {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        const cor =
+          tipo === "erro"
+            ? "bg-red-600"
+            : tipo === "info"
+              ? "bg-blue-600"
+              : "bg-emerald-600";
+        toast.className = `p-4 text-white rounded-xl shadow-2xl font-semibold text-sm ${cor} animate-bounce transition-all`;
+        toast.innerText = msg;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
       }
 
-      function atualizarDataListClientes(lista) {
-        const datalist = document.getElementById("clientes-list");
-        if (datalist) {
-          datalist.innerHTML = lista
-            .map((c) => `<option value="${c.descricao}">`)
-            .join("");
-        }
-      }
-
-      function carregarListaClientes() {
-        const tbody = document.getElementById("tabela-cli");
-        if (tbody)
-          tbody.innerHTML =
-            '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-sm">Atualizando base de dados...</td></tr>';
-
-        google.script.run
-          .withSuccessHandler((res) => {
-            if (res.sucesso && res.dados.length > 0) {
-              listaCli = res.dados;
-              if (tbody) renderizarTabelaClientes(listaCli);
-              atualizarDataListClientes(listaCli);
-            } else {
-              listaCli = [];
-              if (tbody)
-                tbody.innerHTML =
-                  '<tr><td colspan="4" class="p-4 text-center text-slate-400 text-sm">Nenhum cliente encontrado.</td></tr>';
-            }
-            if (
-              document.getElementById("cli-id") &&
-              !document.getElementById("cli-id").hasAttribute("readonly")
-            ) {
-              document.getElementById("cli-id").value = gerarProximoId();
-            }
-          })
-          .listarClientes();
-      }
-
-      function renderizarTabelaClientes(lista) {
-        const corpo = document.getElementById("tabela-cli");
-        if (!corpo) return;
-
-        if (lista.length === 0) {
-          corpo.innerHTML =
-            '<tr><td colspan="4" class="p-10 text-center text-slate-400">Nenhum cliente encontrado na pesquisa.</td></tr>';
-          return;
-        }
-        corpo.innerHTML = lista
-          .map(
-            (c) => `
-          <tr class="hover:bg-slate-50 transition-colors group border-b border-slate-100">
-              <td class="p-4 font-mono font-bold text-blue-600 text-sm">${c.id}</td>
-              <td class="p-4 font-medium text-slate-800 text-sm">${c.descricao}</td>
-              <td class="p-4 text-slate-500 text-sm">${c.cidade || "-"}</td>
-              <td class="p-4 text-center flex justify-center gap-2">
-                  <button onclick="editarCliente('${c.id}')" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-blue-600 hover:text-white transition-all shadow-sm">EDITAR</button>
-                  <button onclick="abrirModalExclusao('${c.id}', '${c.descricao}')" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm">EXCLUIR</button>
-              </td>
-          </tr>
-        `,
-          )
-          .join("");
-      }
-
-      function filtrarClientes() {
-        const termo = document.getElementById("filtro-cli").value.toLowerCase();
-        if (termo === "") {
-          renderizarTabelaClientes(listaCli);
-          return;
-        }
-        const filtrados = listaCli.filter(
-          (c) =>
-            c.descricao.toLowerCase().includes(termo) ||
-            c.id.toString().includes(termo) ||
-            (c.cidade && c.cidade.toLowerCase().includes(termo)),
-        );
-        renderizarTabelaClientes(filtrados);
-      }
-
-      function editarCliente(id) {
-        const cliente = listaCli.find((c) => c.id.toString() === id.toString());
-        if (cliente) {
-          document.getElementById("cli-id").value = cliente.id;
-          document.getElementById("cli-nome").value = cliente.descricao;
-          document.getElementById("cli-celular").value = cliente.celular;
-          document.getElementById("cli-cidade").value = cliente.cidade;
-          document.getElementById("cli-bairro").value = cliente.bairro;
-          document.getElementById("cli-endereco").value = cliente.endereco;
-
-          document.getElementById("cli-id").setAttribute("readonly", true);
-          document
-            .getElementById("cli-id")
-            .classList.add("bg-slate-100", "text-slate-500");
-
-          const btnSalvar = document.getElementById("btnSalvarCliente");
-          btnSalvar.innerText = "Atualizar Cadastro";
-          btnSalvar.classList.replace("bg-green-600", "bg-blue-600");
-          btnSalvar.classList.replace(
-            "hover:bg-green-700",
-            "hover:bg-blue-700",
-          );
-
-          document
-            .getElementById("btnCancelarCliente")
-            .classList.remove("hidden");
-          document
-            .getElementById("cli-id")
-            .scrollIntoView({ behavior: "smooth" });
-        }
-      }
-
-      function abrirModalExclusao(id, nome) {
-        idClienteParaExcluir = id;
-        document.getElementById("msg-exclusao-modal").innerHTML =
-          `Deseja realmente remover o cliente <b>${nome}</b>?`;
-        const modal = document.getElementById("modal-exclusao");
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
-      }
-
-      function fecharModalExclusao() {
-        idClienteParaExcluir = null;
-        const modal = document.getElementById("modal-exclusao");
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-      }
-
-      function confirmarExclusao() {
-        if (!idClienteParaExcluir) return;
-        const idSalvo = idClienteParaExcluir;
-        fecharModalExclusao();
-        mostrarToast("A processar exclusão...", "info");
-
-        google.script.run
-          .withSuccessHandler((res) => {
-            if (res && res.sucesso) {
-              mostrarToast(res.mensagem, "sucesso");
-              carregarListaClientes();
-            } else {
-              mostrarToast(res.mensagem || "Erro ao excluir", "erro");
-            }
-          })
-          .withFailureHandler((err) => {
-            mostrarToast("Erro técnico: " + (err.message || err), "erro");
-          })
-          .eliminarCliente(idSalvo);
-      }
-
-      // --- FUNÇÕES FINANCEIRO ---
-      let parcelasAtuais = [];
-
-      function carregarProximoIdVenda() {
-        const inputId = document.getElementById("fin-idVenda");
-        inputId.value = "A gerar...";
-        google.script.run
-          .withSuccessHandler((res) => {
-            if (res.sucesso) {
-              inputId.value = res.id;
-            } else {
-              mostrarToast("Erro ao gerar ID: " + res.mensagem, "erro");
-              inputId.removeAttribute("readonly");
-              inputId.classList.remove("bg-slate-100");
-              inputId.value = "";
-            }
-          })
-          .obterProximoIdVenda();
-      }
-
-      function verificarMetodoPagamento() {
-        const selectMetodo = document.getElementById("fin-metodo");
-        const selectParcelas = document.getElementById("fin-parcelas");
-
-        if (!selectMetodo || !selectParcelas) return;
-
-        const metodo = selectMetodo.value;
-        const metodosAVista = [
-          "BOLETO À VISTA",
-          "CARTÃO À VISTA",
-          "ESPECIE / PIX",
-        ];
-
-        if (metodosAVista.includes(metodo)) {
-          selectParcelas.value = "1";
-          selectParcelas.disabled = true;
-          gerarParcelas();
-        } else {
-          selectParcelas.disabled = false;
-        }
-      }
-
-      function gerarParcelas() {
-        const valorTotal = parseFloat(
-          document.getElementById("fin-valor").value,
-        );
-        const qtd = parseInt(document.getElementById("fin-parcelas").value);
-        const inputDataVenc = document.getElementById("fin-data-primeiro-venc");
-        const tbody = document.getElementById("lista-parcelas");
-
-        if (!valorTotal || valorTotal <= 0) {
-          tbody.innerHTML =
-            '<tr><td colspan="3" class="pt-2 text-center text-slate-400">Informe o valor total.</td></tr>';
-          return;
-        }
-
-        const valorBase = Math.floor((valorTotal / qtd) * 100) / 100;
-        const resto = parseFloat((valorTotal - valorBase * qtd).toFixed(2));
-        parcelasAtuais = [];
-        let html = "";
-
-        // 🚀 NOVIDADE: Lógica do 1º Vencimento
-        let dataBase = new Date(); // Padrão é hoje
-        if (inputDataVenc && inputDataVenc.value) {
-          const partes = inputDataVenc.value.split("-");
-          // Instanciar assim: new Date(Ano, Mês - 1, Dia) evita bugs de fuso horário
-          dataBase = new Date(partes[0], partes[1] - 1, partes[2]);
-        }
-
-        for (let i = 1; i <= qtd; i++) {
-          let valorParcela = i === 1 ? valorBase + resto : valorBase;
-
-          let vencimento = new Date(dataBase);
-          // Adiciona 1 mês para cada parcela, começando da data informada pelo cliente!
-          vencimento.setMonth(vencimento.getMonth() + (i - 1));
-
-          let dataStr = vencimento.toISOString().split("T")[0];
-
-          parcelasAtuais.push({
-            numero: i,
-            vencimento: dataStr,
-            valor: valorParcela,
-            status: "PENDENTE",
-          });
-
-          html += `
-            <tr class="border-b border-slate-100 last:border-0">
-              <td class="py-2 text-slate-600 font-medium">${i}</td>
-              <td class="py-2"><input type="date" value="${dataStr}" class="border rounded px-2 py-1 text-sm bg-white" disabled></td>
-              <td class="py-2 text-right font-mono font-bold text-slate-800">R$ ${valorParcela.toFixed(2)}</td>
-            </tr>
-          `;
-        }
-        tbody.innerHTML = html;
-      }
-
-      function salvarVenda() {
-        const selectParcelas = document.getElementById("fin-parcelas");
-        const textoParcelas =
-          selectParcelas.options[selectParcelas.selectedIndex].text;
-        const metodoPagamento = document.getElementById("fin-metodo").value;
-
-        const nomeClienteDigitado = String(
-          document.getElementById("fin-cliente").value,
-        ).trim();
-        const idVenda = String(
-          document.getElementById("fin-idVenda").value,
-        ).trim();
-        const valorTotal = parseFloat(
-          document.getElementById("fin-valor").value,
-        );
-
-        if (
-          !idVenda ||
-          !nomeClienteDigitado ||
-          !valorTotal ||
-          parcelasAtuais.length === 0
-        ) {
-          mostrarToast("Preencha ID, Cliente e Valor corretamente.", "erro");
-          return;
-        }
-
-        const clienteValido = listaCli.find(
-          (c) =>
-            c.descricao.toLowerCase() === nomeClienteDigitado.toLowerCase(),
-        );
-
-        if (!clienteValido) {
-          mostrarToast(
-            "Cliente não encontrado! Por favor, cadastre o cliente em 'Gestão de Clientes' antes de prosseguir.",
-            "erro",
-          );
-          return;
-        }
-
-        const venda = {
-          idVenda: idVenda,
-          cliente: clienteValido.descricao,
-          valorTotal: valorTotal,
-          formaPagamento: `${metodoPagamento} (${textoParcelas})`,
-          saldoDevedor: valorTotal,
-          status: "EM ABERTO",
-        };
-
-        const btn = document.getElementById("btnSalvarVenda");
-        btn.disabled = true;
-        btn.innerText = "A processar...";
-
-        google.script.run
-          .withSuccessHandler((res) => {
-            mostrarToast(res.mensagem, "sucesso");
-            btn.disabled = false;
-            btn.innerText = "Gravar Lançamento";
-
-            document
-              .querySelectorAll("#view-financeiro input")
-              .forEach((i) => (i.value = ""));
-            document.getElementById("fin-metodo").selectedIndex = 0;
-            document.getElementById("fin-parcelas").selectedIndex = 0;
-            document.getElementById("fin-parcelas").disabled = false;
-            document.getElementById("lista-parcelas").innerHTML = "";
-            // ... logo abaixo da linha: document.getElementById("lista-parcelas").innerHTML = "";
-            const campoData = document.getElementById("fin-data-primeiro-venc");
-            if (campoData)
-              campoData.value = new Date().toLocaleDateString("en-CA");
-            carregarProximoIdVenda();
-          })
-          .withFailureHandler((err) => {
-            mostrarToast("Erro técnico: " + err, "erro");
-            btn.disabled = false;
-            btn.innerText = "Gravar Lançamento";
-          })
-          .processarGravacao(venda, parcelasAtuais);
-      }
-
-      // --- FUNÇÕES DE CONFIRMAÇÃO DE PAGAMENTO ---
-      function carregarParcelasPendentes() {
-        const tbody = document.getElementById("tabela-pagamentos");
-        if (tbody)
-          tbody.innerHTML =
-            '<tr><td colspan="6" class="p-4 text-center text-slate-400 text-sm">Atualizando pendências...</td></tr>';
-
-        google.script.run
-          .withSuccessHandler((res) => {
-            if (res.sucesso && res.dados.length > 0) {
-              listaPagamentos = res.dados;
-              aplicarFiltrosPagamentos(); // Envia para a central de filtros
-            } else {
-              listaPagamentos = [];
-              if (tbody)
-                tbody.innerHTML =
-                  '<tr><td colspan="6" class="p-10 text-center text-slate-400">Nenhuma parcela pendente encontrada. Aleluia!</td></tr>';
-              atualizarBadgeFiltro();
-            }
-          })
-          .listarParcelasPendentes();
-      }
-
-      // NOVO: Central unificada de filtros (Texto + Status do Cartão)
-      function aplicarFiltrosPagamentos() {
-        atualizarBadgeFiltro();
-        let filtrados = listaPagamentos;
-
-        if (statusFiltroAtivo) {
-          filtrados = filtrados.filter((p) => p.status === statusFiltroAtivo);
-        }
-
-        const campoFiltro = document.getElementById("filtro-pagamentos");
-        if (campoFiltro) {
-          const termo = campoFiltro.value.toLowerCase();
-          if (termo !== "") {
-            filtrados = filtrados.filter(
-              (p) =>
-                p.cliente.toLowerCase().includes(termo) ||
-                p.idVenda.toLowerCase().includes(termo),
-            );
-          }
-        }
-
-        renderizarTabelaPagamentos(filtrados);
-      }
-
-      // Quando o cliente digitar algo, aciona a central unificada
-      function filtrarPagamentos() {
-        aplicarFiltrosPagamentos();
-      }
-
-      function renderizarTabelaPagamentos(lista) {
-        const corpo = document.getElementById("tabela-pagamentos");
-        if (!corpo) return;
-
-        if (lista.length === 0) {
-          corpo.innerHTML =
-            '<tr><td colspan="6" class="p-10 text-center text-slate-400">Nenhum resultado para a pesquisa ou filtro.</td></tr>';
-          return;
-        }
-
-        corpo.innerHTML = lista
-          .map((p) => {
-            const [ano, mes, dia] = p.vencimento.split("-");
-            const dataBR = `${dia}/${mes}/${ano}`;
-            const valorFmt = parseFloat(p.valor).toLocaleString("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            });
-
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-            const dataVenc = new Date(ano, mes - 1, dia);
-            const isAtrasado = dataVenc < hoje;
-            const corTextoData = isAtrasado
-              ? "text-red-600 font-bold"
-              : "text-slate-600";
-
-            return `
-          <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
-              <td class="p-4 font-mono font-bold text-blue-600 text-sm">${p.idVenda}</td>
-              <td class="p-4 font-medium text-slate-800 text-sm">${p.cliente}</td>
-              <td class="p-4 text-slate-500 text-sm">Nº ${p.numero}</td>
-              <td class="p-4 text-sm ${corTextoData}">${dataBR} ${isAtrasado ? '<span class="text-[10px] bg-red-100 px-2 py-0.5 rounded ml-1 text-red-700">Atrasado</span>' : ""}</td>
-              <td class="p-4 text-right font-mono font-bold text-slate-800 text-sm">${valorFmt}</td>
-              <td class="p-4 text-center">
-                  <button onclick="confirmarBaixa('${p.idVenda}', ${p.numero})" class="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition-all shadow-sm flex items-center justify-center mx-auto gap-1">
-                    <i data-lucide="check" class="w-3 h-3"></i> DAR BAIXA
-                  </button>
-              </td>
-          </tr>
-        `;
-          })
-          .join("");
-
-        lucide.createIcons();
-      }
-
-      function confirmarBaixa(idVenda, numero) {
-        if (
-          confirm(
-            `Confirma o recebimento da parcela Nº ${numero} da venda ${idVenda}?`,
-          )
-        ) {
-          mostrarToast("A processar pagamento...", "info");
-
-          google.script.run
-            .withSuccessHandler((res) => {
-              if (res.sucesso) {
-                mostrarToast(res.mensagem, "sucesso");
-                carregarParcelasPendentes();
-                carregarDashboard();
-              } else {
-                mostrarToast("Erro: " + res.mensagem, "erro");
-              }
-            })
-            .confirmarPagamentoParcela(idVenda, numero);
-        }
-      }
-
-      function carregarListaClientes() {
-        const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-        const aba = ss.getSheetByName("Clientes");
-        return aba ? aba.getDataRange().getValues() : [];
-      }
-
-      // --- INICIALIZAÇÃO DA PÁGINA ---
       window.onload = () => {
-        // Removido carregarDashboard() daqui para evitar erro de acesso negado antes do login
-        const loginOverlay = document.getElementById("login-overlay");
-        if (loginOverlay) loginOverlay.style.display = "flex";
+        console.log("Interface MAJB Sistemas v1.5.2 carregada.");
       };
     </script>
   </body>
