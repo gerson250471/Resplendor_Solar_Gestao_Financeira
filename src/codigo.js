@@ -270,5 +270,4 @@ function processarTrocaSenha(usuario, novaSenha) {
   } catch (e) {
     return { sucesso: false, mensagem: e.message };
   }
-  // teste de implementação
 }
