@@ -6,9 +6,6 @@
     <title>Resplendor Solar - Master</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
@@ -41,7 +38,6 @@
           transform: translateY(0);
         }
       }
-
       #login-overlay {
         position: fixed;
         top: 0;
@@ -62,6 +58,13 @@
         outline: none;
         transition: all 0.2s;
         font-size: 0.9rem;
+      }
+      .finance-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        padding: 24px;
       }
     </style>
   </head>
@@ -182,8 +185,8 @@
             Nova Senha
           </h2>
           <p class="text-slate-500 text-sm text-center mb-6 italic">
-            Este é o seu primeiro acesso. Por segurança, escolha uma senha
-            definitiva.
+            Primeiro acesso detectado. Por segurança corporativa, escolha uma
+            senha definitiva.
           </p>
 
           <div class="space-y-4 text-left">
@@ -233,31 +236,72 @@
       lucide.createIcons();
       google.charts.load("current", { packages: ["corechart"] });
 
-      // 1. LÓGICA DE LOGIN COM TRAVA DE SEGURANÇA
+      /**
+       * ============================================================================
+       * 1. NAVEGAÇÃO E MENSAGENS DO SISTEMA
+       * ============================================================================
+       */
+
+      function mostrarToast(msg, tipo = "sucesso") {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+
+        let corDeFundo = "bg-emerald-600";
+        if (tipo === "erro") corDeFundo = "bg-red-600";
+        if (tipo === "info") corDeFundo = "bg-blue-600";
+
+        toast.className = `p-4 text-white rounded-xl shadow-2xl font-semibold text-sm ${corDeFundo} animate-bounce transition-all`;
+        toast.innerText = msg;
+
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+      }
+
+      function navegarPara(tela) {
+        // Esconde todas as telas
+        document
+          .querySelectorAll(".page-view")
+          .forEach((el) => el.classList.remove("active"));
+
+        // Mostra apenas a tela clicada
+        const view = document.getElementById(`view-${tela}`);
+        if (view) view.classList.add("active");
+
+        // Dispara os eventos corretos conforme a aba aberta
+        if (tela === "dashboard") carregarDashboard();
+        if (tela === "clientes") carregarListaClientes();
+        if (tela === "financeiro") carregarDadosFinanceiro();
+        if (tela === "pagamentos") carregarParcelasPendentes();
+      }
+
+      /**
+       * ============================================================================
+       * 2. LÓGICA DE LOGIN E SEGURANÇA
+       * ============================================================================
+       */
+
       function fazerLogin() {
         const usuario = document.getElementById("user-login").value;
         const senha = document.getElementById("pass-login").value;
+
         if (!usuario || !senha) {
           mostrarToast("Preencha todos os campos", "erro");
           return;
         }
 
-        mostrarToast("Validando acesso...", "info");
+        mostrarToast("Validando acesso no banco de dados...", "info");
 
         google.script.run
           .withSuccessHandler((res) => {
             if (res.sucesso) {
-              // Salva os dados na sessão do navegador para uso posterior
+              // Salva o usuário na sessão do navegador
               sessionStorage.setItem("usuarioAtivo", usuario);
-              sessionStorage.setItem("nivelAcesso", res.nivel);
-
               document.getElementById("login-overlay").style.display = "none";
 
-              // Verifica se o servidor sinalizou a troca de senha
               if (res.precisaTrocar) {
                 navegarPara("troca-senha");
                 mostrarToast(
-                  "Ação necessária: Altere sua senha inicial.",
+                  "Alerta de Segurança: Altere sua senha inicial.",
                   "info",
                 );
               } else {
@@ -271,7 +315,6 @@
           .validarAcesso(usuario, senha);
       }
 
-      // 2. LÓGICA PARA GRAVAR A NOVA SENHA
       function salvarNovaSenha() {
         const nova = document.getElementById("nova-senha").value;
         const confirma = document.getElementById("confirma-senha").value;
@@ -294,19 +337,20 @@
               mostrarToast("Senha atualizada com sucesso!");
               navegarPara("dashboard");
             } else {
-              mostrarToast(
-                "Erro ao gravar nova senha. Tente novamente.",
-                "erro",
-              );
+              mostrarToast("Falha ao gravar senha.", "erro");
             }
           })
           .atualizarSenhaDefinitiva(usuario, nova);
       }
 
-      // 3. CARREGAMENTO DO DASHBOARD E GRÁFICOS
+      /**
+       * ============================================================================
+       * 3. LÓGICA DO DASHBOARD E GRÁFICOS
+       * ============================================================================
+       */
+
       function carregarDashboard() {
-        const dashTotal = document.getElementById("dash-total");
-        if (dashTotal) dashTotal.innerText = "Carregando...";
+        document.getElementById("dash-total").innerText = "Processando...";
 
         google.script.run
           .withSuccessHandler((res) => {
@@ -333,7 +377,7 @@
                   document.getElementById("grafico_pagas"),
                 );
                 chartPagas.draw(dataPagas, {
-                  legend: { position: "none" },
+                  legend: "none",
                   animation: { startup: true, duration: 1000, easing: "out" },
                 });
 
@@ -344,54 +388,302 @@
                   document.getElementById("grafico_receber"),
                 );
                 chartReceber.draw(dataReceber, {
-                  legend: { position: "none" },
+                  legend: "none",
                   animation: { startup: true, duration: 1000, easing: "out" },
                 });
               }
-            } else {
-              mostrarToast(
-                "Erro ao carregar gráficos: " + res.mensagem,
-                "erro",
-              );
             }
-          })
-          .withFailureHandler((err) => {
-            mostrarToast("Erro de comunicação: " + err.message, "erro");
           })
           .getResumoFinanceiro();
       }
 
-      function navegarPara(tela) {
+      window.abrirFiltroStatus = function (status) {
+        navegarPara("pagamentos");
+        setTimeout(() => {
+          const combo = document.getElementById("filtro-status-pagamentos");
+          if (combo) {
+            combo.value = status;
+            renderizarTabelaPagamentos();
+          }
+        }, 150);
+      };
+
+      /**
+       * ============================================================================
+       * 4. LÓGICA DE CADASTRO DE CLIENTES
+       * ============================================================================
+       */
+
+      let clientesGlobais = [];
+
+      function carregarListaClientes() {
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res.sucesso) {
+              clientesGlobais = res.dados;
+              renderizarTabelaClientes();
+              atualizarDatalistClientes();
+            }
+          })
+          .carregarListaClientes();
+      }
+
+      function salvarNovoCliente() {
+        const clienteObj = {
+          id: document.getElementById("cli-id").value,
+          nome: document.getElementById("cli-nome").value,
+          celular: document.getElementById("cli-celular").value,
+          cidade: document.getElementById("cli-cidade").value,
+          bairro: document.getElementById("cli-bairro").value,
+          endereco: document.getElementById("cli-endereco").value,
+        };
+
+        if (!clienteObj.nome) {
+          mostrarToast("O Nome é obrigatório", "erro");
+          return;
+        }
+
+        mostrarToast("Salvando cliente...", "info");
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res.sucesso) {
+              mostrarToast("Cliente salvo com sucesso!");
+              limparFormularioCliente();
+              carregarListaClientes();
+            }
+          })
+          .salvarClienteNoServidor(clienteObj);
+      }
+
+      function renderizarTabelaClientes() {
+        const tabela = document.getElementById("tabela-cli");
+        const filtro = document
+          .getElementById("filtro-cli")
+          .value.toUpperCase();
+        if (!tabela) return;
+
+        tabela.innerHTML = "";
+
+        const filtrados = clientesGlobais.filter(
+          (c) =>
+            c.nome.toUpperCase().includes(filtro) ||
+            c.id.toString().includes(filtro),
+        );
+
+        filtrados.forEach((c) => {
+          tabela.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 transition-colors">
+              <td class="p-3 text-sm">${c.id}</td>
+              <td class="p-3 text-sm font-medium">${c.nome}</td>
+              <td class="p-3 text-sm">${c.cidade}</td>
+              <td class="p-3 text-center"><button class="text-blue-600 font-bold hover:underline">Ver Detalhes</button></td>
+            </tr>
+          `;
+        });
+      }
+
+      function limparFormularioCliente() {
         document
-          .querySelectorAll(".page-view")
-          .forEach((el) => el.classList.remove("active"));
-        const view = document.getElementById(`view-${tela}`);
-        if (view) view.classList.add("active");
-
-        // Gatilhos de carregamento
-        if (tela === "dashboard") carregarDashboard();
-        if (tela === "clientes") carregarListaClientes();
-        if (tela === "financeiro") carregarProximoIdVenda();
-        if (tela === "pagamentos") carregarParcelasPendentes();
+          .querySelectorAll("#view-clientes input")
+          .forEach((input) => (input.value = ""));
       }
 
-      function mostrarToast(msg, tipo = "sucesso") {
-        const container = document.getElementById("toast-container");
-        const toast = document.createElement("div");
-        const cor =
-          tipo === "erro"
-            ? "bg-red-600"
-            : tipo === "info"
-              ? "bg-blue-600"
-              : "bg-emerald-600";
-        toast.className = `p-4 text-white rounded-xl shadow-2xl font-semibold text-sm ${cor} animate-bounce transition-all`;
-        toast.innerText = msg;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
+      window.filtrarClientes = () => renderizarTabelaClientes();
+
+      /**
+       * ============================================================================
+       * 5. LÓGICA DE LANÇAMENTOS FINANCEIROS (VENDAS)
+       * ============================================================================
+       */
+
+      function carregarDadosFinanceiro() {
+        google.script.run
+          .withSuccessHandler((idGerado) => {
+            document.getElementById("fin-idVenda").value = idGerado;
+          })
+          .obterProximoIdVenda();
+
+        atualizarDatalistClientes();
       }
 
-      window.onload = () => {
-        console.log("Interface MAJB Sistemas v1.5.2 carregada.");
+      function atualizarDatalistClientes() {
+        const dataList = document.getElementById("clientes-list");
+        if (!dataList) return;
+
+        dataList.innerHTML = "";
+        clientesGlobais.forEach((c) => {
+          dataList.innerHTML += `<option value="${c.nome}">`;
+        });
+      }
+
+      function gerarParcelas() {
+        const total =
+          parseFloat(document.getElementById("fin-valor").value) || 0;
+        const qtdParcelas = parseInt(
+          document.getElementById("fin-parcelas").value,
+        );
+        const dataInicial = document.getElementById(
+          "fin-data-primeiro-venc",
+        ).value;
+        const listaHtml = document.getElementById("lista-parcelas");
+
+        if (!total || !dataInicial) return;
+
+        listaHtml.innerHTML = "";
+
+        // Cálculo de Arredondamento Bancário
+        const valorBase = Math.floor((total / qtdParcelas) * 100) / 100;
+        const resto = parseFloat((total - valorBase * qtdParcelas).toFixed(2));
+
+        let dataProvisoria = new Date(dataInicial + "T12:00:00");
+
+        for (let i = 1; i <= qtdParcelas; i++) {
+          let valorDestaParcela = i === 1 ? valorBase + resto : valorBase;
+
+          listaHtml.innerHTML += `
+            <tr class="border-b">
+              <td class="py-2 text-slate-500">${i}º</td>
+              <td class="text-slate-800 font-medium">${dataProvisoria.toLocaleDateString("pt-BR")}</td>
+              <td class="text-right font-bold text-emerald-700">R$ ${valorDestaParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+            </tr>
+          `;
+
+          dataProvisoria.setMonth(dataProvisoria.getMonth() + 1);
+        }
+      }
+
+      function salvarVenda() {
+        const venda = {
+          id: document.getElementById("fin-idVenda").value,
+          cliente: document.getElementById("fin-cliente").value,
+          valor: document.getElementById("fin-valor").value,
+          data: new Date().toLocaleDateString("pt-BR"),
+          metodo: document.getElementById("fin-metodo").value,
+        };
+
+        const qtdParcelas = parseInt(
+          document.getElementById("fin-parcelas").value,
+        );
+        const dataInicial = document.getElementById(
+          "fin-data-primeiro-venc",
+        ).value;
+
+        if (!venda.valor || !venda.cliente || !dataInicial) {
+          mostrarToast("Preencha o cliente, valor e o 1º vencimento.", "erro");
+          return;
+        }
+
+        mostrarToast("Gravando lançamento no servidor...", "info");
+
+        let arrayDeParcelas = [];
+        let dataLoop = new Date(dataInicial + "T12:00:00");
+        const valorBase = Math.floor((venda.valor / qtdParcelas) * 100) / 100;
+        const restoCentavos = parseFloat(
+          (venda.valor - valorBase * qtdParcelas).toFixed(2),
+        );
+
+        for (let i = 1; i <= qtdParcelas; i++) {
+          arrayDeParcelas.push({
+            vencimento: new Date(dataLoop).toLocaleDateString("pt-BR"),
+            valor: i === 1 ? valorBase + restoCentavos : valorBase,
+          });
+          dataLoop.setMonth(dataLoop.getMonth() + 1);
+        }
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res.sucesso) {
+              mostrarToast("Venda e Parcelas gravadas com sucesso!");
+              navegarPara("dashboard");
+            } else {
+              mostrarToast("Erro ao gravar: " + res.mensagem, "erro");
+            }
+          })
+          .salvarVendaNoServidor(venda, arrayDeParcelas);
+      }
+
+      /**
+       * ============================================================================
+       * 6. LÓGICA DE BAIXAS E PAGAMENTOS
+       * ============================================================================
+       */
+
+      let parcelasGlobais = [];
+
+      function carregarParcelasPendentes() {
+        const tabela = document.getElementById("tabela-pagamentos");
+        if (tabela) {
+          tabela.innerHTML =
+            '<tr><td colspan="6" class="p-4 text-center text-slate-500 font-medium animate-pulse">Consultando banco de dados...</td></tr>';
+        }
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res.sucesso) {
+              parcelasGlobais = res.dados;
+              renderizarTabelaPagamentos();
+            }
+          })
+          .obterListaParcelas();
+      }
+
+      window.mudarStatusCombobox = () => renderizarTabelaPagamentos();
+      window.filtrarPagamentos = () => renderizarTabelaPagamentos();
+
+      function renderizarTabelaPagamentos() {
+        const tabela = document.getElementById("tabela-pagamentos");
+        const filtroSelect = document
+          .getElementById("filtro-status-pagamentos")
+          .value.toUpperCase();
+        const filtroTexto = document
+          .getElementById("filtro-pagamentos")
+          .value.toUpperCase();
+
+        if (!tabela) return;
+        tabela.innerHTML = "";
+
+        const filtradas = parcelasGlobais.filter((p) => {
+          const matchStatus = filtroSelect === "" || p.status === filtroSelect;
+          const matchTexto =
+            p.cliente.toUpperCase().includes(filtroTexto) ||
+            p.idVenda.includes(filtroTexto);
+          return matchStatus && matchTexto;
+        });
+
+        if (filtradas.length === 0) {
+          tabela.innerHTML =
+            '<tr><td colspan="6" class="p-4 text-center text-slate-500">Nenhuma parcela pendente encontrada.</td></tr>';
+          return;
+        }
+
+        filtradas.forEach((p) => {
+          const tr = document.createElement("tr");
+          tr.className = "border-b hover:bg-slate-50 transition-colors";
+
+          let corStatus = "text-emerald-600 font-bold";
+          if (p.status === "EM ATRASO") corStatus = "text-red-600 font-bold";
+          if (p.status === "URGENTE") corStatus = "text-amber-600 font-bold";
+
+          tr.innerHTML = `
+            <td class="p-3 text-sm font-mono">${p.idVenda}</td>
+            <td class="p-3 text-sm uppercase font-medium text-slate-700">${p.cliente}</td>
+            <td class="p-3 text-sm"><span class="${corStatus} bg-slate-100 px-2 py-1 rounded-full text-xs">${p.status}</span></td>
+            <td class="p-3 text-sm">${p.vencimento}</td>
+            <td class="p-3 text-sm font-bold text-right">R$ ${p.valor}</td>
+            <td class="p-3 text-center">
+              <button onclick="iniciarBaixa(${p.linha})" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-blue-700 shadow-md">BAIXAR</button>
+            </td>
+          `;
+          tabela.appendChild(tr);
+        });
+      }
+
+      window.iniciarBaixa = function (linha) {
+        mostrarToast(
+          `Preparando a baixa da linha ${linha} na planilha... Em breve!`,
+          "info",
+        );
       };
     </script>
   </body>
