@@ -228,6 +228,60 @@
     </main>
 
     <div
+      id="modal-baixa"
+      class="fixed inset-0 bg-slate-900/80 z-[10000] hidden flex items-center justify-center backdrop-blur-sm transition-all"
+    >
+      <div
+        class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm transform transition-all"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-bold text-slate-800">
+            Registro de Pagamento
+          </h3>
+          <button
+            onclick="fecharModalBaixa()"
+            class="text-slate-400 hover:text-red-500 transition-colors"
+          >
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <p class="text-sm text-slate-500 mb-6 border-b pb-4">
+          Informe o valor pago pelo cliente. Se for menor que o total, o sistema
+          gerará uma parcela com o restante para daqui a 15 dias.
+        </p>
+
+        <input type="hidden" id="modal-linha-planilha" />
+
+        <div class="mb-6">
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
+            >Valor Recebido (R$)</label
+          >
+          <input
+            type="text"
+            id="modal-valor-pago"
+            class="input-field text-xl font-bold text-emerald-700 text-center"
+          />
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            onclick="fecharModalBaixa()"
+            class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            onclick="confirmarBaixaModal()"
+            class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-md transition-colors text-sm"
+          >
+            Confirmar Baixa
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
       id="toast-container"
       class="fixed top-6 right-6 z-[10001] flex flex-col gap-3"
     ></div>
@@ -684,25 +738,49 @@
         });
       }
 
+      // --- LÓGICA DO MODAL DE BAIXA DE PARCELAS ---
+
+      // 1. Abre o modal e preenche com os dados da parcela clicada
       window.iniciarBaixa = function (linhaPlanilha, valorOriginalString) {
-        // 1. Pergunta o valor pago (já vem preenchido com o valor total)
-        const input = prompt(
-          "REGISTRO DE PAGAMENTO\n\nInforme o valor pago pelo cliente:\n(Se o valor for menor, o sistema gerará uma parcela com o restante para daqui a 15 dias.)",
-          valorOriginalString,
+        document.getElementById("modal-linha-planilha").value = linhaPlanilha;
+        document.getElementById("modal-valor-pago").value = valorOriginalString;
+
+        // Remove a classe 'hidden' para o modal aparecer na tela
+        document.getElementById("modal-baixa").classList.remove("hidden");
+
+        // Recarrega os ícones Lucide para o 'X' aparecer
+        lucide.createIcons();
+      };
+
+      // 2. Fecha o modal
+      window.fecharModalBaixa = function () {
+        document.getElementById("modal-baixa").classList.add("hidden");
+      };
+
+      // 3. Executa a gravação quando clica em "Confirmar"
+      window.confirmarBaixaModal = function () {
+        const linhaPlanilha = document.getElementById(
+          "modal-linha-planilha",
+        ).value;
+        const inputValor = document.getElementById("modal-valor-pago").value;
+
+        if (!inputValor || inputValor.trim() === "") {
+          mostrarToast("Informe o valor recebido.", "erro");
+          return;
+        }
+
+        // Converte a string "1.250,00" para número real do computador: 1250.00
+        let valorPago = parseFloat(
+          inputValor.replace(/\./g, "").replace(",", "."),
         );
-
-        // Se o utilizador clicar em Cancelar ou deixar em branco
-        if (input === null || input.trim() === "") return;
-
-        // 2. Converte a string "1.250,00" para número real do computador: 1250.00
-        let valorPago = parseFloat(input.replace(/\./g, "").replace(",", "."));
 
         if (isNaN(valorPago) || valorPago <= 0) {
           mostrarToast("Valor inválido. Operação cancelada.", "erro");
           return;
         }
 
-        // 3. Envia para o servidor
+        // Fecha o modal antes de começar a processar
+        fecharModalBaixa();
         mostrarToast("A processar pagamento no banco de dados...", "info");
 
         google.script.run
@@ -710,14 +788,13 @@
             if (res.sucesso) {
               if (res.parcial) {
                 mostrarToast(
-                  "Baixa parcial efetuada! Nova parcela gerada para 15 dias.",
+                  "Baixa parcial efetuada! Nova parcela para 15 dias.",
                   "info",
                 );
               } else {
-                mostrarToast("Parcela liquidada integralmente com sucesso!");
+                mostrarToast("Parcela liquidada integralmente!");
               }
-              // Atualiza a tabela limpando as parcelas pagas da tela
-              carregarParcelasPendentes();
+              carregarParcelasPendentes(); // Atualiza a tabela
             } else {
               mostrarToast(res.mensagem, "erro");
             }
@@ -725,7 +802,7 @@
           .withFailureHandler((err) => {
             mostrarToast("Erro de comunicação: " + err.message, "erro");
           })
-          .registrarBaixaParcela(linhaPlanilha, valorPago); // Envia a linha e o valor exato
+          .registrarBaixaParcela(linhaPlanilha, valorPago);
       };
     </script>
   </body>
