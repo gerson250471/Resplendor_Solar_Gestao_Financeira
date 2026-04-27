@@ -465,11 +465,11 @@
 
         tabela.innerHTML = "";
 
-        const filtrados = clientesGlobais.filter(
-          (c) =>
-            c.nome.toUpperCase().includes(filtro) ||
-            c.id.toString().includes(filtro),
-        );
+        const filtrados = clientesGlobais.filter((c) => {
+          const nomeTexto = String(c.nome).toUpperCase();
+          const idTexto = String(c.id).toUpperCase();
+          return nomeTexto.includes(filtro) || idTexto.includes(filtro);
+        });
 
         filtrados.forEach((c) => {
           tabela.innerHTML += `
@@ -645,9 +645,14 @@
 
         const filtradas = parcelasGlobais.filter((p) => {
           const matchStatus = filtroSelect === "" || p.status === filtroSelect;
+
+          // CORREÇÃO: Força a transformação em Texto (String) antes de procurar
+          const clienteTexto = String(p.cliente).toUpperCase();
+          const idTexto = String(p.idVenda).toUpperCase();
+
           const matchTexto =
-            p.cliente.toUpperCase().includes(filtroTexto) ||
-            p.idVenda.includes(filtroTexto);
+            clienteTexto.includes(filtroTexto) || idTexto.includes(filtroTexto);
+
           return matchStatus && matchTexto;
         });
 
@@ -672,18 +677,55 @@
             <td class="p-3 text-sm">${p.vencimento}</td>
             <td class="p-3 text-sm font-bold text-right">R$ ${p.valor}</td>
             <td class="p-3 text-center">
-              <button onclick="iniciarBaixa(${p.linha})" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-blue-700 shadow-md">BAIXAR</button>
+              <button onclick="iniciarBaixa(${p.linha}, '${p.valor}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-blue-700 shadow-md transition-colors">BAIXAR</button>
             </td>
           `;
           tabela.appendChild(tr);
         });
       }
 
-      window.iniciarBaixa = function (linha) {
-        mostrarToast(
-          `Preparando a baixa da linha ${linha} na planilha... Em breve!`,
-          "info",
+      window.iniciarBaixa = function (linhaPlanilha, valorOriginalString) {
+        // 1. Pergunta o valor pago (já vem preenchido com o valor total)
+        const input = prompt(
+          "REGISTRO DE PAGAMENTO\n\nInforme o valor pago pelo cliente:\n(Se o valor for menor, o sistema gerará uma parcela com o restante para daqui a 15 dias.)",
+          valorOriginalString,
         );
+
+        // Se o utilizador clicar em Cancelar ou deixar em branco
+        if (input === null || input.trim() === "") return;
+
+        // 2. Converte a string "1.250,00" para número real do computador: 1250.00
+        let valorPago = parseFloat(input.replace(/\./g, "").replace(",", "."));
+
+        if (isNaN(valorPago) || valorPago <= 0) {
+          mostrarToast("Valor inválido. Operação cancelada.", "erro");
+          return;
+        }
+
+        // 3. Envia para o servidor
+        mostrarToast("A processar pagamento no banco de dados...", "info");
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res.sucesso) {
+              if (res.parcial) {
+                mostrarToast(
+                  "Baixa parcial efetuada! Nova parcela gerada para 15 dias.",
+                  "info",
+                );
+              } else {
+                mostrarToast("Parcela liquidada integralmente com sucesso!");
+              }
+              // Atualiza a tabela limpando as parcelas pagas da tela
+              carregarParcelasPendentes();
+            } else {
+              mostrarToast(res.mensagem, "erro");
+            }
+          })
+          .withFailureHandler((err) => {
+            mostrarToast("Erro de comunicação: " + err.message, "erro");
+          })
+          .registrarBaixaParcela(linhaPlanilha, valorPago); // Envia a linha e o valor exato
       };
     </script>
   </body>
